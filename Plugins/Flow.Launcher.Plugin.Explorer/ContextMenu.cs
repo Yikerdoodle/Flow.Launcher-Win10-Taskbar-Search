@@ -32,6 +32,13 @@ namespace Flow.Launcher.Plugin.Explorer
             var contextMenus = new List<Result>();
             if (selectedResult.ContextData is SearchResult record)
             {
+                if (record.Type == ResultType.File)
+                {
+                    var taskbarPin = TaskbarPin.CreateContextMenuResult(record.FullPath, Context.API, "Images/pin.png", "Images/unpin.png");
+                    if (taskbarPin != null)
+                        contextMenus.Add(taskbarPin);
+                }
+
                 if (record.Type == ResultType.File && !string.IsNullOrEmpty(Settings.EditorPath))
                     contextMenus.Add(CreateOpenWithEditorResult(record, Settings.EditorPath));
 

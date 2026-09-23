@@ -271,6 +271,12 @@ namespace Flow.Launcher.Plugin.Program.Programs
             {
                 contextMenus.Add(OpenTargetFolderContextMenuResult(api));
             }
+
+            var taskbarPin = TaskbarPin.CreateContextMenuResult(FullPath, api, "Images/pin.png", "Images/unpin.png");
+            if (taskbarPin != null)
+            {
+                contextMenus.Insert(0, taskbarPin);
+            }
             return contextMenus;
         }
 

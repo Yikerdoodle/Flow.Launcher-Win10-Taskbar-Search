@@ -9,6 +9,7 @@ using System.Windows.Media.Imaging;
 using Windows.ApplicationModel;
 using Windows.Management.Deployment;
 using Flow.Launcher.Plugin.Program.Logger;
+using Flow.Launcher.Plugin.SharedCommands;
 using Flow.Launcher.Plugin.SharedModels;
 using System.Threading.Channels;
 using System.Xml;
@@ -503,6 +504,12 @@ namespace Flow.Launcher.Plugin.Program.Programs
                     IcoPath = "Images/cmd.png",
                     Glyph = new GlyphInfo(FontFamily: "/Resources/#Segoe Fluent Icons", Glyph: "\xe7ef")
                 });
+            }
+
+            var taskbarPin = TaskbarPin.CreateContextMenuResult(TaskbarPin.AppPath(UserModelId), api, "Images/pin.png", "Images/unpin.png");
+            if (taskbarPin != null)
+            {
+                contextMenus.Insert(0, taskbarPin);
             }
 
             return contextMenus;
