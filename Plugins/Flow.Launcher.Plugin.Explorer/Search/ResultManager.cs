@@ -146,7 +146,7 @@ namespace Flow.Launcher.Plugin.Explorer.Search
                 SubTitle = subtitle,
                 AutoCompleteText = GetAutoCompleteText(title, query, path, ResultType.Folder),
                 TitleHighlightData = (highlightData == null || highlightData.Count == 0) ?
-                                        Context.API.FuzzySearch(query.Search, title).MatchData :
+                                        Context.API.FuzzySearch(query.Search ?? string.Empty, title).MatchData :
                                         highlightData,
                 CopyText = path,
                 Preview = new Result.PreviewInfo
@@ -350,7 +350,7 @@ namespace Flow.Launcher.Plugin.Explorer.Search
                 },
                 AutoCompleteText = GetAutoCompleteText(title, query, filePath, ResultType.File),
                 TitleHighlightData = (highlightData == null || highlightData.Count == 0) ? 
-                                        Context.API.FuzzySearch(query.Search, title).MatchData :
+                                        Context.API.FuzzySearch(query.Search ?? string.Empty, title).MatchData :
                                         highlightData,
                 Score = score,
                 CopyText = filePath,

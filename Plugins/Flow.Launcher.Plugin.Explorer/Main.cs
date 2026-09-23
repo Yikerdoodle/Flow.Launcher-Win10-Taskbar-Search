@@ -15,7 +15,7 @@ using System.Globalization;
 
 namespace Flow.Launcher.Plugin.Explorer
 {
-    public class Main : ISettingProvider, IAsyncPlugin, IContextMenu, IPluginI18n, IAsyncDialogJump
+    public class Main : ISettingProvider, IAsyncPlugin, IContextMenu, IPluginI18n, IAsyncDialogJump, IAsyncHomeQuery
     {
         internal static PluginInitContext Context { get; set; }
 
@@ -54,6 +54,23 @@ namespace Flow.Launcher.Plugin.Explorer
         public List<Result> LoadContextMenus(Result selectedResult)
         {
             return contextMenu.LoadContextMenus(selectedResult);
+        }
+
+        public async Task<List<Result>> HomeQueryAsync(CancellationToken token)
+        {
+            try
+            {
+                return await Task.Run(() => RecentFiles.Get(token), token);
+            }
+            catch (OperationCanceledException)
+            {
+                return new List<Result>();
+            }
+            catch (Exception e)
+            {
+                Context.API.LogException(nameof(Main), "Failed to load recent files", e);
+                return new List<Result>();
+            }
         }
 
         public async Task<List<Result>> QueryAsync(Query query, CancellationToken token)
