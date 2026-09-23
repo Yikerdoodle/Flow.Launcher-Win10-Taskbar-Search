@@ -17,6 +17,7 @@ to review or rebase onto a newer Flow Launcher release.
 | **Fix:** when more than one plugin shows home page results, their result batches no longer clear each other (upstream only showed the slowest plugin's results). | `MainViewModel.cs` |
 | **Top apps** on the home page. The Program plugin shows the 6 most-launched apps, using Windows' own UserAssist launch counts. | `Plugin.Program/TopApps.cs` |
 | **Recent files** on the home page. The Explorer plugin shows the 8 most recent files from the Windows Recent folder. | `Plugin.Explorer/Search/RecentFiles.cs` |
+| **Pin to taskbar / Unpin from taskbar** at the top of the right-click menu of apps (desktop and Store) and pinnable files, using Windows' own wording and the Windows 10 pin/unpin symbols. Windows blocks other programs from pinning, so Flow selects the item in an Explorer window and chooses Explorer's own menu command; an Explorer window flashes for about a second. | `Plugin/SharedCommands/TaskbarPin.cs`, Program and Explorer plugins |
 | **Windows 10 Taskbar** theme: square corners, taskbar-height search box, search icon on the left, follows system light/dark. | `Themes/Win10Taskbar.xaml` |
 
 ## Settings used with this fork
@@ -32,6 +33,7 @@ These are ordinary Flow Launcher settings; nothing here is hard-coded:
 - **Plugin priorities:** Program 4, Windows Settings 3, System Commands 2, Web Searches -5
 - **Plugins → Program:** hide uninstallers
 - **Plugins → Web Searches:** search suggestions on
+- **Auto update plugins:** off (an update would swap the modified Program and Explorer plugins for the official ones)
 
 ## Building
 
@@ -41,6 +43,10 @@ Requires the .NET 9 SDK.
 dotnet build Flow.Launcher.sln -c Release
 dotnet publish Flow.Launcher/Flow.Launcher.csproj -c Release /p:PublishProfile=Flow.Launcher/Properties/PublishProfiles/Net9.0-SelfContained.pubxml
 ```
+
+Before building a copy to install, set the version in `SolutionAssemblyInfo.cs` and the `"Version"` in each
+`Plugins/*/plugin.json` to the release this fork is based on, as upstream's CI does. With the source default of
+1.0.0, Flow offers to "update" the built-in plugins to the official ones.
 
 The self-contained app ends up in `Output/Release`. Copy that folder anywhere (for example
 `%LOCALAPPDATA%\Programs\FlowLauncher`) and run `Flow.Launcher.exe`. Leave **automatic updates
