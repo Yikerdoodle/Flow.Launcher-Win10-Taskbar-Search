@@ -29,6 +29,7 @@
     PreviewMouseMove="OnPreviewMouseMove"
     ResizeMode="CanResize"
     ShowInTaskbar="False"
+    SizeChanged="OnSizeChanged"
     SizeToContent="Height"
     SourceInitialized="OnSourceInitialized"
     Topmost="True"
@@ -214,7 +215,7 @@
     </Window.InputBindings>
 
     <Border MouseDown="OnMouseDown" Style="{DynamicResource WindowBorderStyle}">
-        <StackPanel Orientation="Vertical">
+        <StackPanel x:Name="MainStack" Orientation="Vertical">
             <Grid x:Name="QueryBoxArea">
                 <Border MinHeight="30" Style="{DynamicResource QueryBoxBgStyle}">
                     <Grid>

@@ -658,7 +658,8 @@ namespace Flow.Launcher.Infrastructure.UserSettings
         CenterTop,
         LeftTop,
         RightTop,
-        Custom
+        Custom,
+        LeftBottom
     }
 
     public enum AnimationSpeeds

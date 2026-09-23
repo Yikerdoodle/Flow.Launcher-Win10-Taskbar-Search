@@ -96,6 +96,7 @@
     <system:String x:Key="SearchWindowAlignLeftTop">Left Top</system:String>
     <system:String x:Key="SearchWindowAlignRightTop">Right Top</system:String>
     <system:String x:Key="SearchWindowAlignCustom">Custom Position</system:String>
+    <system:String x:Key="SearchWindowAlignLeftBottom">Left Bottom (above taskbar, results grow upward)</system:String>
     <system:String x:Key="language">Language</system:String>
     <system:String x:Key="lastQueryMode">Last Query Style</system:String>
     <system:String x:Key="lastQueryModeToolTip">Show/Hide previous results when Flow Launcher is reactivated.</system:String>

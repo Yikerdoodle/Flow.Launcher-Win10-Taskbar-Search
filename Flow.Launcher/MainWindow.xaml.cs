@@ -166,6 +166,8 @@ namespace Flow.Launcher
             SetupPlaceholderText();
             _viewModel.PlaceholderText = _settings.PlaceholderText;
 
+            ApplyResultsLayout();
+
             // Hide window if need
             UpdatePosition();
             if (_settings.HideOnStartup)
@@ -346,6 +348,10 @@ namespace Flow.Launcher
                         break;
                     case nameof(Settings.UseSound):
                         SyncSoundEffectsState();
+                        break;
+                    case nameof(Settings.SearchWindowAlign):
+                    case nameof(Settings.SearchWindowScreen):
+                        ApplyResultsLayout();
                         break;
                 }
             };
@@ -1013,6 +1019,10 @@ namespace Flow.Launcher
                             Left = customLeft.X;
                             Top = customTop.Y;
                             break;
+                        case SearchWindowAligns.LeftBottom:
+                            Left = HorizonLeftEdge(screen);
+                            Top = VerticalBottomAnchored(screen);
+                            break;
                     }
                 }
             }
@@ -1127,6 +1137,62 @@ namespace Flow.Launcher
             var dip1 = Win32Helper.TransformPixelsToDIP(this, 0, screen.WorkingArea.Y);
             var top = dip1.Y + 10;
             return top;
+        }
+
+        // Flush with the left edge of the working area, like the Windows 10 search panel
+        private double HorizonLeftEdge(MonitorInfo screen)
+        {
+            var dip1 = Win32Helper.TransformPixelsToDIP(this, screen.WorkingArea.X, 0);
+            return dip1.X;
+        }
+
+        // Keeps the bottom edge of the window sitting on the taskbar so results grow upward
+        private double VerticalBottomAnchored(MonitorInfo screen)
+        {
+            var bottom = Win32Helper.TransformPixelsToDIP(this, 0, screen.WorkingArea.Y + screen.WorkingArea.Height);
+            return bottom.Y - ActualHeight;
+        }
+
+        private bool IsBottomAnchored =>
+            _settings.SearchWindowScreen != SearchWindowScreens.RememberLastLaunchLocation &&
+            _settings.SearchWindowAlign == SearchWindowAligns.LeftBottom;
+
+        private void OnSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (!IsLoaded || !e.HeightChanged || !IsBottomAnchored || _viewModel.IsDialogJumpWindowUnderDialog())
+            {
+                return;
+            }
+
+            Top = VerticalBottomAnchored(SelectedScreen());
+        }
+
+        // With a bottom anchored window the query box goes below the results, like the Windows 10 search panel
+        private void ApplyResultsLayout()
+        {
+            var wantBoxAtBottom = IsBottomAnchored;
+            var boxIsAtBottom = MainStack.Children.IndexOf(QueryBoxArea) == MainStack.Children.Count - 1;
+            if (wantBoxAtBottom == boxIsAtBottom)
+            {
+                return;
+            }
+
+            MainStack.Children.Remove(QueryBoxArea);
+            MainStack.Children.Remove(ResultPreviewAreaBoarder);
+            MainStack.Children.Remove(MiddleSeparatorArea);
+
+            if (wantBoxAtBottom)
+            {
+                MainStack.Children.Add(ResultPreviewAreaBoarder);
+                MainStack.Children.Add(MiddleSeparatorArea);
+                MainStack.Children.Add(QueryBoxArea);
+            }
+            else
+            {
+                MainStack.Children.Add(QueryBoxArea);
+                MainStack.Children.Add(MiddleSeparatorArea);
+                MainStack.Children.Add(ResultPreviewAreaBoarder);
+            }
         }
 
         #endregion
