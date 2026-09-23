@@ -1689,8 +1689,20 @@ namespace Flow.Launcher.ViewModel
         /// <returns>True if the existing results should be cleared, false otherwise.</returns>
         private bool ShouldClearExistingResultsForQuery(Query query, bool currentIsHomeQuery)
         {
-            // If previous or current results are from home query, we need to clear them
-            if (_previousIsHomeQuery || currentIsHomeQuery)
+            // Results of one home query can arrive in several batches (one per plugin),
+            // so only the first batch of a new home query clears the existing results
+            if (currentIsHomeQuery)
+            {
+                var isNewHomeQuery = !_previousIsHomeQuery || !ReferenceEquals(_lastQuery, query);
+                if (isNewHomeQuery)
+                {
+                    App.API.LogDebug(ClassName, $"Existing results should be cleared for query");
+                }
+                return isNewHomeQuery;
+            }
+
+            // If previous results are from home query, we need to clear them
+            if (_previousIsHomeQuery)
             {
                 App.API.LogDebug(ClassName, $"Existing results should be cleared for query");
                 return true;
