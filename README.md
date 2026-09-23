@@ -1,3 +1,5 @@
+> **This is a fork.** It turns Flow Launcher into a Windows 10 taskbar search replacement (bottom-left panel, results growing upward, top apps and recent files on the home page, Everything-powered file search). See [FORK.md](FORK.md) for what changed. For the official app, go to [Flow-Launcher/Flow.Launcher](https://github.com/Flow-Launcher/Flow.Launcher).
+
 <p align="center">
         <a href="https://flowlauncher.com">
         	<img src="https://user-images.githubusercontent.com/6903107/207167068-2196d2a3-2caa-4856-958b-a780fbda95c6.gif" width="500">
