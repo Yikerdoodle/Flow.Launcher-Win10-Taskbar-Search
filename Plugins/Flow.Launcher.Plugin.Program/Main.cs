@@ -15,9 +15,12 @@ using Path = System.IO.Path;
 
 namespace Flow.Launcher.Plugin.Program
 {
-    public class Main : ISettingProvider, IAsyncPlugin, IPluginI18n, IContextMenu, IAsyncReloadable, IDisposable
+    public class Main : ISettingProvider, IAsyncPlugin, IPluginI18n, IContextMenu, IAsyncReloadable, IDisposable, IAsyncHomeQuery
     {
         private static readonly string ClassName = nameof(Main);
+
+        private const int TopAppsCount = 6;
+        private const int TopAppsBaseScore = 100000;
 
         private const string Win32CacheName = "Win32";
         private const string UwpCacheName = "UWP";
@@ -149,6 +152,67 @@ namespace Flow.Launcher.Plugin.Program
             }
             catch (OperationCanceledException)
             {
+                return emptyResults;
+            }
+        }
+
+        public async Task<List<Result>> HomeQueryAsync(CancellationToken token)
+        {
+            try
+            {
+                List<Win32> win32s;
+                await _win32sLock.WaitAsync(token);
+                try { win32s = [.. _win32s]; }
+                finally { _win32sLock.Release(); }
+
+                List<UWPApp> uwps;
+                await _uwpsLock.WaitAsync(token);
+                try { uwps = [.. _uwps]; }
+                finally { _uwpsLock.Release(); }
+
+                return await Task.Run(() =>
+                {
+                    var usages = TopApps.Read();
+                    if (usages.Count == 0) return emptyResults;
+
+                    var ranked = win32s.Cast<IProgram>()
+                        .Concat(uwps)
+                        .Where(p => p.Enabled)
+                        .Where(HideUninstallersFilter)
+                        .Select(p => (Program: p, Usage: TopApps.Find(usages, p switch
+                        {
+                            Win32 w => new[] { w.FullPath, w.LnkResolvedPath },
+                            UWPApp u => new[] { u.UserModelId },
+                            _ => Array.Empty<string>()
+                        })))
+                        .Where(x => x.Usage != null)
+                        .OrderByDescending(x => x.Usage.RunCount)
+                        .ThenByDescending(x => x.Usage.LastRun)
+                        .DistinctBy(x => x.Program.Name, StringComparer.OrdinalIgnoreCase)
+                        .Take(TopAppsCount)
+                        .ToList();
+
+                    var results = new List<Result>();
+                    for (var i = 0; i < ranked.Count; i++)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        var result = ranked[i].Program.Result(string.Empty, Context.API);
+                        if (result == null) continue;
+                        result.SubTitle = Context.API.GetTranslation("flowlauncher_plugin_program_top_app");
+                        result.Score = TopAppsBaseScore - i;
+                        result.TitleHighlightData = null;
+                        results.Add(result);
+                    }
+                    return results;
+                }, token);
+            }
+            catch (OperationCanceledException)
+            {
+                return emptyResults;
+            }
+            catch (Exception e)
+            {
+                Context.API.LogException(ClassName, "Failed to load top apps", e);
                 return emptyResults;
             }
         }
