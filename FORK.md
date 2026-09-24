@@ -13,11 +13,11 @@ to review or rebase onto a newer Flow Launcher release.
 
 | Change | Where |
 |---|---|
-| New **Left Bottom** window position. The window sits flush in the bottom-left corner, the search box is below the results, and the results list grows upward, like the Windows 10 search panel. | `MainWindow.xaml(.cs)`, `Settings.cs` |
+| New **Left Bottom** window position. The window sits flush in the bottom-left corner, the search box is below the results, and the results list grows upward, like the Windows 10 search panel. With an auto-hide taskbar, the window stops right above where the taskbar pops up, so the taskbar never covers the search box. | `MainWindow.xaml(.cs)`, `Settings.cs`, `Win32Helper.cs` |
 | **Fix:** when more than one plugin shows home page results, their result batches no longer clear each other (upstream only showed the slowest plugin's results). | `MainViewModel.cs` |
 | **Top apps** on the home page. The Program plugin shows the 6 most-launched apps, using Windows' own UserAssist launch counts. | `Plugin.Program/TopApps.cs` |
 | **Recent files** on the home page. The Explorer plugin shows the 8 most recent files from the Windows Recent folder. | `Plugin.Explorer/Search/RecentFiles.cs` |
-| **Pin to taskbar / Unpin from taskbar** at the top of the right-click menu of apps (desktop and Store) and pinnable files, using Windows' own wording and the Windows 10 pin/unpin symbols. Windows blocks other programs from pinning, so Flow selects the item in an Explorer window and chooses Explorer's own menu command; an Explorer window flashes for about a second. | `Plugin/SharedCommands/TaskbarPin.cs`, Program and Explorer plugins |
+| **Pin to taskbar / Unpin from taskbar** at the top of the right-click menu of apps (desktop and Store) and pinnable files, using Windows' own wording and the Windows 10 pin/unpin symbols. Unpinning is silent, through the documented `IStartMenuPinnedList` API, unless the item also has a Start menu tile (that API would remove the tile too). Windows only allows pinning from Explorer's own menu, so Flow selects the item in an Explorer window and chooses Explorer's menu command, with the window and menu made fully transparent the moment Explorer creates them. | `Plugin/SharedCommands/TaskbarPin.cs`, Program and Explorer plugins |
 | **Windows 10 Taskbar** theme: square corners, taskbar-height search box, search icon on the left, follows system light/dark. | `Themes/Win10Taskbar.xaml` |
 
 ## Settings used with this fork
