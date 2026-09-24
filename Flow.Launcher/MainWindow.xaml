@@ -215,334 +215,361 @@
     </Window.InputBindings>
 
     <Border MouseDown="OnMouseDown" Style="{DynamicResource WindowBorderStyle}">
-        <StackPanel x:Name="MainStack" Orientation="Vertical">
-            <Grid x:Name="QueryBoxArea">
-                <Border MinHeight="30" Style="{DynamicResource QueryBoxBgStyle}">
-                    <Grid>
-                        <TextBox
-                            x:Name="QueryTextPlaceholderBox"
-                            Height="{Binding MainWindowHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            FontSize="{Binding QueryBoxFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            IsEnabled="False"
-                            Style="{DynamicResource QuerySuggestionBoxStyle}"
-                            Text="{Binding PlaceholderText, Mode=OneWay}"
-                            Visibility="Collapsed" />
-                        <TextBox
-                            x:Name="QueryTextSuggestionBox"
-                            Height="{Binding MainWindowHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            FontSize="{Binding QueryBoxFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            IsEnabled="False"
-                            Style="{DynamicResource QuerySuggestionBoxStyle}">
-                            <TextBox.Text>
-                                <MultiBinding Converter="{StaticResource QuerySuggestionBoxConverter}">
-                                    <Binding ElementName="QueryTextBox" Mode="OneTime" />
-                                    <Binding ElementName="ResultListBox" Path="SelectedItem" />
-                                    <Binding ElementName="QueryTextBox" Path="Text" />
-                                </MultiBinding>
-                            </TextBox.Text>
-                        </TextBox>
-                        <TextBox
-                            x:Name="QueryTextBox"
-                            Height="{Binding MainWindowHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            AllowDrop="True"
-                            AutomationProperties.Name="{Binding Results.SelectedItem.Result.Title}"
-                            FontSize="{Binding QueryBoxFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            InputMethod.PreferredImeConversionMode="{Binding StartWithEnglishMode, Converter={StaticResource BoolToIMEConversionModeConverter}}"
-                            InputMethod.PreferredImeState="{Binding StartWithEnglishMode, Converter={StaticResource BoolToIMEStateConverter}}"
-                            PreviewDragOver="QueryTextBox_OnPreviewDragOver"
-                            PreviewKeyUp="QueryTextBox_KeyUp"
-                            Style="{DynamicResource QueryBoxStyle}"
-                            Text="{Binding QueryText, Mode=OneWay}"
-                            TextChanged="QueryTextBox_TextChanged1"
-                            Visibility="Visible"
-                            WindowChrome.IsHitTestVisibleInChrome="True">
-                            <TextBox.CommandBindings>
-                                <CommandBinding Command="ApplicationCommands.Copy" Executed="QueryTextBox_OnCopy" />
-                            </TextBox.CommandBindings>
-                            <TextBox.ContextMenu>
-                                <ContextMenu MinWidth="160">
-                                    <MenuItem Command="ApplicationCommands.Cut" Header="{DynamicResource cut}">
-                                        <MenuItem.Icon>
-                                            <ui:FontIcon Glyph="&#xe8c6;" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <MenuItem Command="ApplicationCommands.Copy" Header="{DynamicResource copy}">
-                                        <MenuItem.Icon>
-                                            <ui:FontIcon Glyph="&#xe8c8;" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <MenuItem Command="ApplicationCommands.Paste" Header="{DynamicResource paste}">
-                                        <MenuItem.Icon>
-                                            <ui:FontIcon Glyph="&#xe77f;" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <Separator
-                                        Margin="0"
-                                        Padding="0 4 0 4"
-                                        Background="{DynamicResource ContextSeparator}" />
-                                    <MenuItem Click="OnContextMenusForSettingsClick" Header="{DynamicResource flowlauncher_settings}">
-                                        <MenuItem.Icon>
-                                            <ui:FontIcon Glyph="&#xe713;" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <MenuItem Command="{Binding EscCommand}" Header="{DynamicResource closeWindow}">
-                                        <MenuItem.Icon>
-                                            <ui:FontIcon Glyph="&#xe711;" />
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                </ContextMenu>
-                            </TextBox.ContextMenu>
-                        </TextBox>
-                    </Grid>
-                </Border>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-                <StackPanel
-                    x:Name="ClockPanel"
-                    IsHitTestVisible="False"
-                    Opacity="{Binding ClockPanelOpacity}"
-                    Style="{DynamicResource ClockPanel}"
-                    Visibility="{Binding ClockPanelVisibility}">
-                    <TextBlock
-                        x:Name="ClockBox"
-                        Style="{DynamicResource ClockBox}"
-                        Text="{Binding ClockText}"
-                        Visibility="{Binding Settings.UseClock, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    <TextBlock
-                        x:Name="DateBox"
-                        Style="{DynamicResource DateBox}"
-                        Text="{Binding DateText}"
-                        Visibility="{Binding Settings.UseDate, Converter={StaticResource BoolToVisibilityConverter}}" />
-                </StackPanel>
-                <Border>
-                    <Grid WindowChrome.IsHitTestVisibleInChrome="True">
-                        <Image
-                            x:Name="PluginActivationIcon"
-                            HorizontalAlignment="Right"
-                            VerticalAlignment="Center"
-                            Panel.ZIndex="2"
-                            RenderOptions.BitmapScalingMode="HighQuality"
-                            Source="{Binding PluginIconSource}"
-                            Stretch="Uniform"
-                            Style="{DynamicResource PluginActivationIcon}" />
-                        <Canvas Style="{DynamicResource SearchIconPosition}">
-                            <Path
-                                Name="SearchIcon"
-                                Margin="0"
-                                Data="{DynamicResource SearchIconImg}"
-                                Opacity="{Binding SearchIconOpacity}"
-                                Stretch="Fill"
-                                Style="{DynamicResource SearchIconStyle}"
-                                Visibility="{Binding SearchIconVisibility}" />
-                        </Canvas>
-                    </Grid>
-                </Border>
-                <Line
-                    x:Name="ProgressBar"
-                    Style="{DynamicResource PendingLineStyle}"
-                    Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}, Path=ActualWidth}"
-                    Height="2"
-                    Margin="12 0 12 0"
+            <!--  Windows 10 Start menu panel, shown in Start mode (Left Bottom position, empty query)  -->
+            <Border
+                x:Name="StartMenuPanel"
+                Grid.Column="0"
+                Width="376"
+                Height="640"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource Win10StartBackground}"
+                Visibility="Collapsed">
+                <TextBlock
                     HorizontalAlignment="Center"
-                    VerticalAlignment="Bottom"
-                    Loaded="ProgressBar_Loaded"
-                    StrokeThickness="2"
-                    Visibility="{Binding ProgressBarVisibility, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    X1="-100"
-                    X2="0"
-                    Y1="0"
-                    Y2="0" />
-            </Grid>
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource Color05B}"
+                    Text="Start menu" />
+            </Border>
 
-            <Grid x:Name="MiddleSeparatorArea" ClipToBounds="True">
-                <ContentControl>
-                    <ContentControl.Style>
-                        <Style TargetType="ContentControl">
-                            <Setter Property="Visibility" Value="Visible" />
-                            <Style.Triggers>
-                                <MultiDataTrigger>
-                                    <MultiDataTrigger.Conditions>
-                                        <Condition Binding="{Binding ElementName=ResultListBox, Path=Items.Count}" Value="0" />
-                                        <Condition Binding="{Binding ElementName=ResultContextMenu, Path=Visibility}" Value="Collapsed" />
-                                        <Condition Binding="{Binding ElementName=History, Path=Visibility}" Value="Collapsed" />
-                                    </MultiDataTrigger.Conditions>
-                                    <MultiDataTrigger.Setters>
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Setter Property="Margin" Value="0" />
-                                        <Setter Property="Height" Value="0" />
-                                    </MultiDataTrigger.Setters>
-                                </MultiDataTrigger>
-                            </Style.Triggers>
-                            <!--<Style.Triggers>
-                                <DataTrigger Binding="{Binding ElementName=ResultListBox, Path=Visibility}" Value="Visible">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding ElementName=ResultContextMenu, Path=Visibility}" Value="Visible">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding ElementName=History, Path=Visibility}" Value="Visible">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
-                            </Style.Triggers>-->
-                        </Style>
-                    </ContentControl.Style>
-                    <Rectangle
-                        Name="MiddleSeparator"
-                        Width="Auto"
-                        HorizontalAlignment="Stretch"
-                        Style="{DynamicResource SeparatorStyle}" />
-                </ContentControl>
-            </Grid>
-
-            <Border x:Name="ResultPreviewAreaBoarder" Style="{DynamicResource WindowRadius}">
-                <Border.Clip>
-                    <MultiBinding Converter="{StaticResource BorderClipConverter}">
-                        <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
-                        <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
-                        <Binding Path="CornerRadius" RelativeSource="{RelativeSource Self}" />
-                    </MultiBinding>
-                </Border.Clip>
-
-                <Grid x:Name="ResultPreviewArea">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" MinWidth="80" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="0.85*" MinWidth="244" />
-                    </Grid.ColumnDefinitions>
+            <StackPanel
+                x:Name="MainStack"
+                Grid.Column="1"
+                VerticalAlignment="Top"
+                Orientation="Vertical">
+                <Grid x:Name="QueryBoxArea">
+                    <Border MinHeight="30" Style="{DynamicResource QueryBoxBgStyle}">
+                        <Grid>
+                            <TextBox
+                                x:Name="QueryTextPlaceholderBox"
+                                Height="{Binding MainWindowHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                FontSize="{Binding QueryBoxFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                IsEnabled="False"
+                                Style="{DynamicResource QuerySuggestionBoxStyle}"
+                                Text="{Binding PlaceholderText, Mode=OneWay}"
+                                Visibility="Collapsed" />
+                            <TextBox
+                                x:Name="QueryTextSuggestionBox"
+                                Height="{Binding MainWindowHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                FontSize="{Binding QueryBoxFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                IsEnabled="False"
+                                Style="{DynamicResource QuerySuggestionBoxStyle}">
+                                <TextBox.Text>
+                                    <MultiBinding Converter="{StaticResource QuerySuggestionBoxConverter}">
+                                        <Binding ElementName="QueryTextBox" Mode="OneTime" />
+                                        <Binding ElementName="ResultListBox" Path="SelectedItem" />
+                                        <Binding ElementName="QueryTextBox" Path="Text" />
+                                    </MultiBinding>
+                                </TextBox.Text>
+                            </TextBox>
+                            <TextBox
+                                x:Name="QueryTextBox"
+                                Height="{Binding MainWindowHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                AllowDrop="True"
+                                AutomationProperties.Name="{Binding Results.SelectedItem.Result.Title}"
+                                FontSize="{Binding QueryBoxFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                InputMethod.PreferredImeConversionMode="{Binding StartWithEnglishMode, Converter={StaticResource BoolToIMEConversionModeConverter}}"
+                                InputMethod.PreferredImeState="{Binding StartWithEnglishMode, Converter={StaticResource BoolToIMEStateConverter}}"
+                                PreviewDragOver="QueryTextBox_OnPreviewDragOver"
+                                PreviewKeyUp="QueryTextBox_KeyUp"
+                                Style="{DynamicResource QueryBoxStyle}"
+                                Text="{Binding QueryText, Mode=OneWay}"
+                                TextChanged="QueryTextBox_TextChanged1"
+                                Visibility="Visible"
+                                WindowChrome.IsHitTestVisibleInChrome="True">
+                                <TextBox.CommandBindings>
+                                    <CommandBinding Command="ApplicationCommands.Copy" Executed="QueryTextBox_OnCopy" />
+                                </TextBox.CommandBindings>
+                                <TextBox.ContextMenu>
+                                    <ContextMenu MinWidth="160">
+                                        <MenuItem Command="ApplicationCommands.Cut" Header="{DynamicResource cut}">
+                                            <MenuItem.Icon>
+                                                <ui:FontIcon Glyph="&#xe8c6;" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="ApplicationCommands.Copy" Header="{DynamicResource copy}">
+                                            <MenuItem.Icon>
+                                                <ui:FontIcon Glyph="&#xe8c8;" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="ApplicationCommands.Paste" Header="{DynamicResource paste}">
+                                            <MenuItem.Icon>
+                                                <ui:FontIcon Glyph="&#xe77f;" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <Separator
+                                            Margin="0"
+                                            Padding="0 4 0 4"
+                                            Background="{DynamicResource ContextSeparator}" />
+                                        <MenuItem Click="OnContextMenusForSettingsClick" Header="{DynamicResource flowlauncher_settings}">
+                                            <MenuItem.Icon>
+                                                <ui:FontIcon Glyph="&#xe713;" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                        <MenuItem Command="{Binding EscCommand}" Header="{DynamicResource closeWindow}">
+                                            <MenuItem.Icon>
+                                                <ui:FontIcon Glyph="&#xe711;" />
+                                            </MenuItem.Icon>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </TextBox.ContextMenu>
+                            </TextBox>
+                        </Grid>
+                    </Border>
 
                     <StackPanel
-                        x:Name="ResultArea"
-                        Grid.Column="0"
-                        Grid.ColumnSpan="{Binding ResultAreaColumn}">
-                        <ContentControl>
-                            <flowlauncher:ResultListBox
-                                x:Name="ResultListBox"
-                                DataContext="{Binding Results}"
-                                LeftClickResultCommand="{Binding LeftClickResultCommand}"
-                                RightClickResultCommand="{Binding RightClickResultCommand}" />
-                        </ContentControl>
-                        <ContentControl>
-                            <flowlauncher:ResultListBox
-                                x:Name="ResultContextMenu"
-                                DataContext="{Binding ContextMenu}"
-                                LeftClickResultCommand="{Binding LeftClickResultCommand}"
-                                RightClickResultCommand="{Binding RightClickResultCommand}" />
-                        </ContentControl>
-                        <ContentControl>
-                            <flowlauncher:ResultListBox
-                                x:Name="History"
-                                DataContext="{Binding History}"
-                                LeftClickResultCommand="{Binding LeftClickResultCommand}"
-                                RightClickResultCommand="{Binding RightClickResultCommand}" />
-                        </ContentControl>
+                        x:Name="ClockPanel"
+                        IsHitTestVisible="False"
+                        Opacity="{Binding ClockPanelOpacity}"
+                        Style="{DynamicResource ClockPanel}"
+                        Visibility="{Binding ClockPanelVisibility}">
+                        <TextBlock
+                            x:Name="ClockBox"
+                            Style="{DynamicResource ClockBox}"
+                            Text="{Binding ClockText}"
+                            Visibility="{Binding Settings.UseClock, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        <TextBlock
+                            x:Name="DateBox"
+                            Style="{DynamicResource DateBox}"
+                            Text="{Binding DateText}"
+                            Visibility="{Binding Settings.UseDate, Converter={StaticResource BoolToVisibilityConverter}}" />
                     </StackPanel>
-
-                    <GridSplitter
-                        x:Name="PreviewMiddleSeparator"
-                        Grid.Column="1"
-                        Margin="0"
+                    <Border>
+                        <Grid WindowChrome.IsHitTestVisibleInChrome="True">
+                            <Image
+                                x:Name="PluginActivationIcon"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Panel.ZIndex="2"
+                                RenderOptions.BitmapScalingMode="HighQuality"
+                                Source="{Binding PluginIconSource}"
+                                Stretch="Uniform"
+                                Style="{DynamicResource PluginActivationIcon}" />
+                            <Canvas Style="{DynamicResource SearchIconPosition}">
+                                <Path
+                                    Name="SearchIcon"
+                                    Margin="0"
+                                    Data="{DynamicResource SearchIconImg}"
+                                    Opacity="{Binding SearchIconOpacity}"
+                                    Stretch="Fill"
+                                    Style="{DynamicResource SearchIconStyle}"
+                                    Visibility="{Binding SearchIconVisibility}" />
+                            </Canvas>
+                        </Grid>
+                    </Border>
+                    <Line
+                        x:Name="ProgressBar"
+                        Style="{DynamicResource PendingLineStyle}"
+                        Width="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Grid}}, Path=ActualWidth}"
+                        Height="2"
+                        Margin="12 0 12 0"
                         HorizontalAlignment="Center"
-                        VerticalAlignment="Stretch"
-                        Background="Transparent"
-                        ShowsPreview="True"
-                        Visibility="{Binding InternalPreviewVisible, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <GridSplitter.Template>
-                            <ControlTemplate TargetType="{x:Type GridSplitter}">
-                                <Border Style="{DynamicResource PreviewBorderStyle}" />
-                            </ControlTemplate>
-                        </GridSplitter.Template>
-                    </GridSplitter>
+                        VerticalAlignment="Bottom"
+                        Loaded="ProgressBar_Loaded"
+                        StrokeThickness="2"
+                        Visibility="{Binding ProgressBarVisibility, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        X1="-100"
+                        X2="0"
+                        Y1="0"
+                        Y2="0" />
+                </Grid>
 
-                    <Grid
-                        x:Name="Preview"
-                        Grid.Column="2"
-                        VerticalAlignment="Stretch"
-                        Style="{DynamicResource PreviewArea}"
-                        Visibility="{Binding InternalPreviewVisible, Converter={StaticResource BoolToVisibilityConverter}}">
-                        <Border
-                            MinHeight="380"
-                            d:DataContext="{d:DesignInstance vm:ResultViewModel}"
-                            DataContext="{Binding PreviewSelectedItem, Mode=OneWay}"
-                            Visibility="{Binding ShowDefaultPreview}">
-                            <Grid
-                                Margin="0 0 10 5"
-                                VerticalAlignment="Stretch"
-                                Background="Transparent">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-                                <Grid Grid.Row="0" VerticalAlignment="Center">
+                <Grid x:Name="MiddleSeparatorArea" ClipToBounds="True">
+                    <ContentControl>
+                        <ContentControl.Style>
+                            <Style TargetType="ContentControl">
+                                <Setter Property="Visibility" Value="Visible" />
+                                <Style.Triggers>
+                                    <MultiDataTrigger>
+                                        <MultiDataTrigger.Conditions>
+                                            <Condition Binding="{Binding ElementName=ResultListBox, Path=Items.Count}" Value="0" />
+                                            <Condition Binding="{Binding ElementName=ResultContextMenu, Path=Visibility}" Value="Collapsed" />
+                                            <Condition Binding="{Binding ElementName=History, Path=Visibility}" Value="Collapsed" />
+                                        </MultiDataTrigger.Conditions>
+                                        <MultiDataTrigger.Setters>
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Setter Property="Margin" Value="0" />
+                                            <Setter Property="Height" Value="0" />
+                                        </MultiDataTrigger.Setters>
+                                    </MultiDataTrigger>
+                                </Style.Triggers>
+                                <!--<Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=ResultListBox, Path=Visibility}" Value="Visible">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ElementName=ResultContextMenu, Path=Visibility}" Value="Visible">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ElementName=History, Path=Visibility}" Value="Visible">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>-->
+                            </Style>
+                        </ContentControl.Style>
+                        <Rectangle
+                            Name="MiddleSeparator"
+                            Width="Auto"
+                            HorizontalAlignment="Stretch"
+                            Style="{DynamicResource SeparatorStyle}" />
+                    </ContentControl>
+                </Grid>
+
+                <Border x:Name="ResultPreviewAreaBoarder" Style="{DynamicResource WindowRadius}">
+                    <Border.Clip>
+                        <MultiBinding Converter="{StaticResource BorderClipConverter}">
+                            <Binding Path="ActualWidth" RelativeSource="{RelativeSource Self}" />
+                            <Binding Path="ActualHeight" RelativeSource="{RelativeSource Self}" />
+                            <Binding Path="CornerRadius" RelativeSource="{RelativeSource Self}" />
+                        </MultiBinding>
+                    </Border.Clip>
+
+                    <Grid x:Name="ResultPreviewArea">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="80" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="0.85*" MinWidth="244" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel
+                            x:Name="ResultArea"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="{Binding ResultAreaColumn}">
+                            <ContentControl>
+                                <flowlauncher:ResultListBox
+                                    x:Name="ResultListBox"
+                                    DataContext="{Binding Results}"
+                                    LeftClickResultCommand="{Binding LeftClickResultCommand}"
+                                    RightClickResultCommand="{Binding RightClickResultCommand}" />
+                            </ContentControl>
+                            <ContentControl>
+                                <flowlauncher:ResultListBox
+                                    x:Name="ResultContextMenu"
+                                    DataContext="{Binding ContextMenu}"
+                                    LeftClickResultCommand="{Binding LeftClickResultCommand}"
+                                    RightClickResultCommand="{Binding RightClickResultCommand}" />
+                            </ContentControl>
+                            <ContentControl>
+                                <flowlauncher:ResultListBox
+                                    x:Name="History"
+                                    DataContext="{Binding History}"
+                                    LeftClickResultCommand="{Binding LeftClickResultCommand}"
+                                    RightClickResultCommand="{Binding RightClickResultCommand}" />
+                            </ContentControl>
+                        </StackPanel>
+
+                        <GridSplitter
+                            x:Name="PreviewMiddleSeparator"
+                            Grid.Column="1"
+                            Margin="0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Stretch"
+                            Background="Transparent"
+                            ShowsPreview="True"
+                            Visibility="{Binding InternalPreviewVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <GridSplitter.Template>
+                                <ControlTemplate TargetType="{x:Type GridSplitter}">
+                                    <Border Style="{DynamicResource PreviewBorderStyle}" />
+                                </ControlTemplate>
+                            </GridSplitter.Template>
+                        </GridSplitter>
+
+                        <Grid
+                            x:Name="Preview"
+                            Grid.Column="2"
+                            VerticalAlignment="Stretch"
+                            Style="{DynamicResource PreviewArea}"
+                            Visibility="{Binding InternalPreviewVisible, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Border
+                                MinHeight="380"
+                                d:DataContext="{d:DesignInstance vm:ResultViewModel}"
+                                DataContext="{Binding PreviewSelectedItem, Mode=OneWay}"
+                                Visibility="{Binding ShowDefaultPreview}">
+                                <Grid
+                                    Margin="0 0 10 5"
+                                    VerticalAlignment="Stretch"
+                                    Background="Transparent">
                                     <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
-                                    <TextBlock
-                                        x:Name="PreviewGlyphIcon"
-                                        Grid.Row="0"
-                                        Height="Auto"
-                                        Margin="0 16 0 0"
-                                        FontFamily="{Binding Glyph.FontFamily}"
-                                        Style="{DynamicResource PreviewGlyph}"
-                                        Text="{Binding Glyph.Glyph}"
-                                        Visibility="{Binding ShowGlyph}" />
-                                    <Image
-                                        x:Name="PreviewImageIcon"
-                                        Grid.Row="0"
-                                        MaxHeight="320"
-                                        Margin="0 16 0 0"
-                                        HorizontalAlignment="Center"
-                                        Source="{Binding PreviewImage}"
-                                        StretchDirection="DownOnly"
-                                        Visibility="{Binding ShowPreviewImage}">
-                                        <Image.Style>
-                                            <Style TargetType="{x:Type Image}">
-                                                <Setter Property="MaxWidth" Value="96" />
+                                    <Grid Grid.Row="0" VerticalAlignment="Center">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock
+                                            x:Name="PreviewGlyphIcon"
+                                            Grid.Row="0"
+                                            Height="Auto"
+                                            Margin="0 16 0 0"
+                                            FontFamily="{Binding Glyph.FontFamily}"
+                                            Style="{DynamicResource PreviewGlyph}"
+                                            Text="{Binding Glyph.Glyph}"
+                                            Visibility="{Binding ShowGlyph}" />
+                                        <Image
+                                            x:Name="PreviewImageIcon"
+                                            Grid.Row="0"
+                                            MaxHeight="320"
+                                            Margin="0 16 0 0"
+                                            HorizontalAlignment="Center"
+                                            Source="{Binding PreviewImage}"
+                                            StretchDirection="DownOnly"
+                                            Visibility="{Binding ShowPreviewImage}">
+                                            <Image.Style>
+                                                <Style TargetType="{x:Type Image}">
+                                                    <Setter Property="MaxWidth" Value="96" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding UseBigThumbnail}" Value="True">
+                                                            <Setter Property="MaxWidth" Value="{Binding ElementName=Preview, Path=ActualWidth}" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Image.Style>
+                                        </Image>
+                                        <TextBlock
+                                            x:Name="PreviewTitle"
+                                            Grid.Row="1"
+                                            Margin="0 6 0 16"
+                                            HorizontalAlignment="Stretch"
+                                            Style="{DynamicResource PreviewItemTitleStyle}"
+                                            Text="{Binding Result.Title}"
+                                            TextAlignment="Center"
+                                            TextWrapping="Wrap" />
+                                    </Grid>
+                                    <StackPanel Grid.Row="1">
+                                        <StackPanel.Style>
+                                            <Style TargetType="{x:Type StackPanel}">
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding UseBigThumbnail}" Value="True">
-                                                        <Setter Property="MaxWidth" Value="{Binding ElementName=Preview, Path=ActualWidth}" />
+                                                    <DataTrigger Binding="{Binding ElementName=PreviewSubTitle, UpdateSourceTrigger=PropertyChanged, Path=Text.Length}" Value="0">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
-                                        </Image.Style>
-                                    </Image>
-                                    <TextBlock
-                                        x:Name="PreviewTitle"
-                                        Grid.Row="1"
-                                        Margin="0 6 0 16"
-                                        HorizontalAlignment="Stretch"
-                                        Style="{DynamicResource PreviewItemTitleStyle}"
-                                        Text="{Binding Result.Title}"
-                                        TextAlignment="Center"
-                                        TextWrapping="Wrap" />
+                                        </StackPanel.Style>
+                                        <Separator Style="{DynamicResource PreviewSep}" />
+                                        <TextBlock
+                                            x:Name="PreviewSubTitle"
+                                            Style="{DynamicResource PreviewItemSubTitleStyle}"
+                                            Text="{Binding PreviewDescription}" />
+                                    </StackPanel>
                                 </Grid>
-                                <StackPanel Grid.Row="1">
-                                    <StackPanel.Style>
-                                        <Style TargetType="{x:Type StackPanel}">
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding ElementName=PreviewSubTitle, UpdateSourceTrigger=PropertyChanged, Path=Text.Length}" Value="0">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </StackPanel.Style>
-                                    <Separator Style="{DynamicResource PreviewSep}" />
-                                    <TextBlock
-                                        x:Name="PreviewSubTitle"
-                                        Style="{DynamicResource PreviewItemSubTitleStyle}"
-                                        Text="{Binding PreviewDescription}" />
-                                </StackPanel>
-                            </Grid>
-                        </Border>
-                        <Border
-                            MinHeight="380"
-                            MaxHeight="{Binding ElementName=ResultListBox, Path=ActualHeight}"
-                            Padding="0 0 10 10"
-                            Visibility="{Binding ShowCustomizedPreview}">
-                            <ContentControl Content="{Binding CustomizedPreviewControl}" />
-                        </Border>
+                            </Border>
+                            <Border
+                                MinHeight="380"
+                                MaxHeight="{Binding ElementName=ResultListBox, Path=ActualHeight}"
+                                Padding="0 0 10 10"
+                                Visibility="{Binding ShowCustomizedPreview}">
+                                <ContentControl Content="{Binding CustomizedPreviewControl}" />
+                            </Border>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Border>
-        </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
     </Border>
 </Window>

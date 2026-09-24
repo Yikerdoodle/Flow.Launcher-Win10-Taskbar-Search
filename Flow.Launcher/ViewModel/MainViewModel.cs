@@ -929,6 +929,21 @@ namespace Flow.Launcher.ViewModel
             }
         }
 
+        /// <summary>
+        /// Start mode (Start menu panel beside the home results) has no preview; the normal layout restores it
+        /// </summary>
+        public void SetStartMode(bool startMode)
+        {
+            if (startMode)
+            {
+                HidePreview();
+            }
+            else
+            {
+                ResetPreview();
+            }
+        }
+
         public double MainWindowHeight
         {
             get => Settings.WindowHeightSize;

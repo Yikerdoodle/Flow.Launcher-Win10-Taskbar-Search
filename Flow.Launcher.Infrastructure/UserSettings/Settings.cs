@@ -517,6 +517,12 @@ namespace Flow.Launcher.Infrastructure.UserSettings
         [JsonConverter(typeof(JsonStringEnumConverter))]
         public SearchWindowAligns SearchWindowAlign { get; set; } = SearchWindowAligns.Center;
 
+        /// <summary>
+        /// With the Left Bottom position: while the query is empty, show a Windows 10 Start menu panel beside the
+        /// home results, without the query box and the preview
+        /// </summary>
+        public bool ShowStartMenuPanel { get; set; } = false;
+
         public int CustomScreenNumber { get; set; } = 1;
 
         public bool IgnoreHotkeysOnFullscreen { get; set; }

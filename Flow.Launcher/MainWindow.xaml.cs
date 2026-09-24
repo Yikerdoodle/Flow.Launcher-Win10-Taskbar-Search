@@ -210,6 +210,7 @@ namespace Flow.Launcher
 
             // Reset preview
             _viewModel.ResetPreview();
+            UpdateStartMode();
 
             // Since the default main window visibility is visible, so we need set focus during startup
             QueryTextBox.Focus();
@@ -260,6 +261,7 @@ namespace Flow.Launcher
 
                                     // Reset preview
                                     _viewModel.ResetPreview();
+                                    UpdateStartMode();
 
                                     // Select last query if need
                                     if (!_viewModel.LastQuerySelected)
@@ -283,6 +285,9 @@ namespace Flow.Launcher
                             });
                             break;
                         }
+                    case nameof(MainViewModel.QueryText):
+                        Dispatcher.Invoke(UpdateStartMode);
+                        break;
                     case nameof(MainViewModel.QueryTextCursorMovedToEnd):
                         if (_viewModel.QueryTextCursorMovedToEnd)
                         {
@@ -352,6 +357,10 @@ namespace Flow.Launcher
                     case nameof(Settings.SearchWindowAlign):
                     case nameof(Settings.SearchWindowScreen):
                         ApplyResultsLayout();
+                        UpdateStartMode();
+                        break;
+                    case nameof(Settings.ShowStartMenuPanel):
+                        UpdateStartMode();
                         break;
                 }
             };
@@ -677,7 +686,8 @@ namespace Flow.Launcher
                         if (!_settings.KeepMaxResults)
                         {
                             // Update width
-                            _viewModel.MainWindowWidth = Width;
+                            // Start mode's wider window is not the saved width
+                            if (!_startMode) _viewModel.MainWindowWidth = Width;
                         }
 
                         SizeToContent = SizeToContent.Height;
@@ -1168,6 +1178,46 @@ namespace Flow.Launcher
         private bool IsBottomAnchored =>
             _settings.SearchWindowScreen != SearchWindowScreens.RememberLastLaunchLocation &&
             _settings.SearchWindowAlign == SearchWindowAligns.LeftBottom;
+
+        private bool _startMode;
+
+        // Start mode: with the Left Bottom position and an empty query, the Start menu panel is shown beside the home
+        // results, without the query box and the preview. Typing switches to the normal search layout.
+        private void UpdateStartMode()
+        {
+            var startMode = IsBottomAnchored && _settings.ShowStartMenuPanel && string.IsNullOrEmpty(_viewModel.QueryText);
+
+            // Re-applied every time Start mode is wanted (showing the window resets the preview), but the search
+            // layout is only restored once, so a preview hidden by hand while searching stays hidden
+            if (!startMode && !_startMode) return;
+            _startMode = startMode;
+
+            StartMenuPanel.Visibility = startMode ? Visibility.Visible : Visibility.Collapsed;
+            // Squeezed to no height rather than hidden, so the query box keeps the keyboard focus for typing
+            QueryBoxArea.Height = startMode ? 0 : double.NaN;
+            QueryBoxArea.ClipToBounds = startMode;
+            _viewModel.SetStartMode(startMode);
+
+            if (startMode)
+            {
+                // The window gets wider by the Start menu panel less the (hidden) preview column, so the results keep
+                // their search layout width. The width binding is taken off meanwhile, so this never becomes the
+                // saved width.
+                var savedWidth = _viewModel.MainWindowWidth;
+                // The preview column is 0.85* next to the results' 1*, and at least 244 wide (see ResultPreviewArea)
+                var previewWidth = Math.Max(244, savedWidth * 0.85 / 1.85);
+                BindingOperations.ClearBinding(this, WidthProperty);
+                Width = savedWidth + StartMenuPanel.Width - previewWidth;
+            }
+            else
+            {
+                SetBinding(WidthProperty, new Binding(nameof(MainViewModel.MainWindowWidth))
+                {
+                    Mode = BindingMode.TwoWay,
+                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                });
+            }
+        }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
