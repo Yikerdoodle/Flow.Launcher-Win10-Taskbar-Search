@@ -133,4 +133,12 @@
     <Thickness x:Key="DisabledCustomButtonOutBorderThickness">1,1,1,1</Thickness>
     <Thickness x:Key="DisabledCustomButtonInsideBorderThickness">0,0,0,0</Thickness>
 
+    <!--  Windows 10 Start menu colors (light), used by the Windows 10 Taskbar theme. Same Windows system colors as
+          the dark ones, with black instead of white; the background is not measured yet, so it stays Flow's  -->
+    <SolidColorBrush x:Key="Win10StartBackground" Color="#f3f3f3" />
+    <Color x:Key="Win10StartHoverColor">#19000000</Color>
+    <SolidColorBrush x:Key="Win10StartSecondaryText" Color="#616161" />
+    <SolidColorBrush x:Key="Win10StartSecondaryTextSelected" Color="#585858" />
+    <SolidColorBrush x:Key="Win10StartScrollThumb" Color="#616161" />
+
 </ResourceDictionary>

@@ -6,6 +6,7 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:helper="clr-namespace:Flow.Launcher.Helper;assembly=Flow.Launcher"
     xmlns:m="clr-namespace:iNKORE.UI.WPF.Modern.Markup;assembly=iNKORE.UI.WPF.Modern"
     xmlns:system="clr-namespace:System;assembly=mscorlib">
     <ResourceDictionary.MergedDictionaries>
@@ -14,7 +15,8 @@
     <system:Boolean x:Key="ThemeBlurEnabled">False</system:Boolean>
     <system:String x:Key="SystemBG">Auto</system:String>
     <Color x:Key="LightBG">#FFFAFAFA</Color>
-    <Color x:Key="DarkBG">#FF202020</Color>
+    <!--  Windows 10 Start menu background (dark), measured  -->
+    <Color x:Key="DarkBG">#FF2F2F2F</Color>
     <Thickness x:Key="ResultMargin">0 0 0 8</Thickness>
     <Style
         x:Key="ItemGlyph"
@@ -54,11 +56,10 @@
         x:Key="WindowBorderStyle"
         BasedOn="{StaticResource BaseWindowBorderStyle}"
         TargetType="{x:Type Border}">
-        <!--  One physical pixel at common scalings (layout rounding), like the Windows 10 search panel's outline  -->
-        <Setter Property="BorderThickness" Value="0.67" />
-        <Setter Property="BorderBrush" Value="{DynamicResource SystemThemeBorder}" />
+        <!--  Like the Windows 10 Start menu: no outline, Start background  -->
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="CornerRadius" Value="0" />
-        <Setter Property="Background" Value="{DynamicResource Color01B}" />
+        <Setter Property="Background" Value="{DynamicResource Win10StartBackground}" />
     </Style>
     <Style
         x:Key="WindowStyle"
@@ -96,7 +97,7 @@
         x:Key="ItemSubTitleStyle"
         BasedOn="{StaticResource BaseItemSubTitleStyle}"
         TargetType="{x:Type TextBlock}">
-        <Setter Property="Foreground" Value="{DynamicResource SubTitleForeground}" />
+        <Setter Property="Foreground" Value="{DynamicResource Win10StartSecondaryText}" />
         <Setter Property="FontSize" Value="13" />
     </Style>
     <Style
@@ -117,9 +118,10 @@
         BasedOn="{StaticResource BaseItemSubTitleSelectedStyle}"
         TargetType="{x:Type TextBlock}">
         <Setter Property="Cursor" Value="Arrow" />
-        <Setter Property="Foreground" Value="{DynamicResource SubTitleSelectedForeground}" />
+        <Setter Property="Foreground" Value="{DynamicResource Win10StartSecondaryTextSelected}" />
     </Style>
-    <SolidColorBrush x:Key="ItemSelectedBackgroundColor" Color="{m:DynamicColor ItemSelectedBackgroundColorBrush}" />
+    <!--  Windows 10 list hover/selection: 10% white (dark) or black (light) over the background  -->
+    <SolidColorBrush x:Key="ItemSelectedBackgroundColor" Color="{m:DynamicColor Win10StartHoverColor}" />
     <Style
         x:Key="ItemImageSelectedStyle"
         BasedOn="{StaticResource BaseItemImageSelectedStyle}"
@@ -151,16 +153,19 @@
         <Setter Property="SnapsToDevicePixels" Value="True" />
         <Setter Property="OverridesDefaultStyle" Value="true" />
         <Setter Property="IsTabStop" Value="false" />
-        <Setter Property="Width" Value="2" />
         <Setter Property="Focusable" Value="false" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type Thumb}">
+                    <!--  Like the Windows 10 Start menu: 2 px wide and 4 px from the edge at 150% scaling  -->
                     <Border
-                        Background="{DynamicResource ThumbColor}"
+                        Width="1.34"
+                        Margin="0 0 2.67 0"
+                        HorizontalAlignment="Right"
+                        Background="{DynamicResource Win10StartScrollThumb}"
                         BorderBrush="Transparent"
                         BorderThickness="0"
-                        CornerRadius="2"
+                        CornerRadius="0"
                         DockPanel.Dock="Right" />
                 </ControlTemplate>
             </Setter.Value>
@@ -169,7 +174,11 @@
     <Style
         x:Key="ScrollBarStyle"
         BasedOn="{StaticResource BaseScrollBarStyle}"
-        TargetType="{x:Type ScrollBar}" />
+        TargetType="{x:Type ScrollBar}">
+        <Setter Property="Width" Value="4.01" />
+        <!--  Hidden until the mouse is over the list or it scrolls, like the Windows 10 Start menu  -->
+        <Setter Property="helper:ScrollBarAutoHide.IsEnabled" Value="True" />
+    </Style>
     <Style
         x:Key="SeparatorStyle"
         BasedOn="{StaticResource BaseSeparatorStyle}"
@@ -211,7 +220,8 @@
         x:Key="PreviewBorderStyle"
         BasedOn="{StaticResource BasePreviewBorderStyle}"
         TargetType="{x:Type Border}">
-        <Setter Property="BorderBrush" Value="{DynamicResource SeparatorForeground}" />
+        <!--  No divider lines, like the Windows 10 Start menu  -->
+        <Setter Property="BorderBrush" Value="Transparent" />
     </Style>
     <Style
         x:Key="PreviewItemTitleStyle"
@@ -223,7 +233,7 @@
         x:Key="PreviewItemSubTitleStyle"
         BasedOn="{StaticResource BasePreviewItemSubTitleStyle}"
         TargetType="{x:Type TextBlock}">
-        <Setter Property="Foreground" Value="{DynamicResource SubTitleForeground}" />
+        <Setter Property="Foreground" Value="{DynamicResource Win10StartSecondaryText}" />
         <Setter Property="FontSize" Value="13" />
     </Style>
     <Style
