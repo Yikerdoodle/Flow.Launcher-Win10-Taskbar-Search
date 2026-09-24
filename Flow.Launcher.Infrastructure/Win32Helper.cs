@@ -1060,6 +1060,39 @@ namespace Flow.Launcher.Infrastructure
             PInvoke.PostMessage(taskbarHwnd, TrayBarFlag, new WPARAM(0), IntPtr.Zero);
         }
 
+        /// <summary>
+        /// Gets the taskbar's bounds in pixels. For an auto-hide taskbar these are its bounds while it is shown.
+        /// </summary>
+        public static bool TryGetTaskbarBounds(out Rect bounds)
+        {
+            var data = new APPBARDATA { cbSize = (uint)Marshal.SizeOf<APPBARDATA>() };
+            if (SHAppBarMessage(ABM_GETTASKBARPOS, ref data) == 0)
+            {
+                bounds = Rect.Empty;
+                return false;
+            }
+
+            bounds = new Rect(data.rc.left, data.rc.top, data.rc.right - data.rc.left, data.rc.bottom - data.rc.top);
+            return true;
+        }
+
+        // Declared here because CsWin32 cannot generate APPBARDATA for AnyCPU (its layout differs between x86 and x64)
+        private const uint ABM_GETTASKBARPOS = 5;
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct APPBARDATA
+        {
+            public uint cbSize;
+            public IntPtr hWnd;
+            public uint uCallbackMessage;
+            public uint uEdge;
+            public RECT rc;
+            public IntPtr lParam;
+        }
+
+        [DllImport("shell32.dll")]
+        private static extern UIntPtr SHAppBarMessage(uint dwMessage, ref APPBARDATA pData);
+
         #endregion
     }
 }

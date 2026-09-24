@@ -1149,7 +1149,19 @@ namespace Flow.Launcher
         // Keeps the bottom edge of the window sitting on the taskbar so results grow upward
         private double VerticalBottomAnchored(MonitorInfo screen)
         {
-            var bottom = Win32Helper.TransformPixelsToDIP(this, 0, screen.WorkingArea.Y + screen.WorkingArea.Height);
+            var bottomPixels = screen.WorkingArea.Y + screen.WorkingArea.Height;
+
+            // An auto-hide taskbar is not excluded from the working area, so stop where it pops up instead
+            if (Win32Helper.TryGetTaskbarBounds(out var taskbar) &&
+                taskbar.Width > taskbar.Height &&
+                taskbar.Bottom >= screen.Bounds.Bottom &&
+                taskbar.Left < screen.Bounds.Right && taskbar.Right > screen.Bounds.Left &&
+                taskbar.Top < bottomPixels)
+            {
+                bottomPixels = taskbar.Top;
+            }
+
+            var bottom = Win32Helper.TransformPixelsToDIP(this, 0, bottomPixels);
             return bottom.Y - ActualHeight;
         }
 
