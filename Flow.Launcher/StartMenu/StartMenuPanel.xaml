@@ -1,0 +1,352 @@
+<UserControl
+    x:Class="Flow.Launcher.StartMenu.StartMenuPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:m="clr-namespace:iNKORE.UI.WPF.Modern.Markup;assembly=iNKORE.UI.WPF.Modern"
+    xmlns:sm="clr-namespace:Flow.Launcher.StartMenu"
+    Background="{DynamicResource Win10StartBackground}"
+    ClipToBounds="True"
+    Focusable="False"
+    MouseLeftButtonDown="OnPanelMouseDown"
+    TextOptions.TextFormattingMode="Ideal">
+    <!--
+        The Windows 10 Start menu, measured on the Windows 10 Start menu at 150% scaling (sizes are in DIP): a 48 wide
+        rail with 48 high buttons, and the All apps list with 36 high rows, 24 icons 4 in from the list's left edge,
+        names 36 in, and a 14 wide gutter on the right for the scroll bar. Text sizes follow the Windows text size
+        setting the way Start does (see StartMenuPanel.xaml.cs).
+    -->
+    <UserControl.Resources>
+        <FontFamily x:Key="StartIconFont">Segoe MDL2 Assets</FontFamily>
+        <SolidColorBrush x:Key="StartAccentBrush" Color="{m:DynamicColor SystemAccentColor}" />
+        <SolidColorBrush x:Key="StartSelectedBrush" Color="{m:DynamicColor SystemAccentColorLight2}" />
+
+        <!--  Start's own flat folder icon (not Explorer's), drawn from the measured pixels: a darker tab, the back
+              edge, and the front with a light-to-dark diagonal gradient  -->
+        <DrawingImage x:Key="StartFolderIcon">
+            <DrawingImage.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Geometry="M0,0 H24 V24 H0 Z" Brush="Transparent" />
+                    <GeometryDrawing Geometry="M0.67,4 A1.33,1.33 0 0 1 2,2.67 H9.33 L11,5.67 H22.67 V8 H0.67 Z">
+                        <GeometryDrawing.Brush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                <GradientStop Offset="0" Color="#E09F00" />
+                                <GradientStop Offset="0.6" Color="#D49000" />
+                                <GradientStop Offset="0.61" Color="#FFD35A" />
+                                <GradientStop Offset="1" Color="#FFD35A" />
+                            </LinearGradientBrush>
+                        </GeometryDrawing.Brush>
+                    </GeometryDrawing>
+                    <GeometryDrawing Geometry="M0.67,7 H22.67 V20 A1.33,1.33 0 0 1 21.33,21.33 H2 A1.33,1.33 0 0 1 0.67,20 Z">
+                        <GeometryDrawing.Brush>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Offset="0" Color="#FFD967" />
+                                <GradientStop Offset="0.5" Color="#FECE47" />
+                                <GradientStop Offset="1" Color="#F6B61E" />
+                            </LinearGradientBrush>
+                        </GeometryDrawing.Brush>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingImage.Drawing>
+        </DrawingImage>
+
+        <Style x:Key="StartText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="{DynamicResource StartFontSize}" />
+            <Setter Property="Foreground" Value="{DynamicResource Win10StartText}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="StartGlyph" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource StartIconFont}" />
+            <Setter Property="Foreground" Value="{DynamicResource Win10StartText}" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <!--  A row of the list: the hover light, and the whole row takes clicks  -->
+        <Style x:Key="StartRow" TargetType="Border">
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Margin" Value="0 0 14 0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="sm:StartMenuReveal.IsEnabled" Value="True" />
+        </Style>
+
+        <DataTemplate DataType="{x:Type sm:AllAppsHeader}">
+            <Border MouseLeftButtonUp="OnHeaderClick" Style="{StaticResource StartRow}">
+                <Grid>
+                    <!--  A letter sits centered over the icons; "Recently added" starts at the icons' left edge  -->
+                    <TextBlock
+                        x:Name="Letter"
+                        Width="24"
+                        Margin="4 -4 0 0"
+                        HorizontalAlignment="Left"
+                        Style="{StaticResource StartText}"
+                        Text="{Binding Text}"
+                        TextAlignment="Center"
+                        TextTrimming="None" />
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding Key}" Value="recent">
+                    <Setter TargetName="Letter" Property="Width" Value="NaN" />
+                    <Setter TargetName="Letter" Property="TextAlignment" Value="Left" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Key}" Value="other">
+                    <Setter TargetName="Letter" Property="FontFamily" Value="{StaticResource StartIconFont}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type sm:AllAppsExpander}">
+            <Border MouseLeftButtonUp="OnExpanderClick" Style="{StaticResource StartRow}">
+                <StackPanel Margin="2.67 -1.33 0 0" Orientation="Horizontal">
+                    <TextBlock Style="{StaticResource StartText}" Text="{Binding Text}" />
+                    <TextBlock
+                        x:Name="Chevron"
+                        Margin="4.67 2 0 0"
+                        FontSize="{DynamicResource StartChevronSize}"
+                        Style="{StaticResource StartGlyph}"
+                        Text="&#xE70D;" />
+                </StackPanel>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                    <Setter TargetName="Chevron" Property="Text" Value="&#xE70E;" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type sm:AllAppsItem}">
+            <Border
+                MouseLeftButtonUp="OnItemClick"
+                MouseRightButtonUp="OnItemRightClick"
+                Style="{StaticResource StartRow}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="36" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Image
+                        x:Name="Icon"
+                        Width="24"
+                        Height="24"
+                        Margin="4 0 0 0"
+                        HorizontalAlignment="Left"
+                        RenderOptions.BitmapScalingMode="HighQuality">
+                        <Image.Style>
+                            <!--  In a style, so the folder trigger below can replace it  -->
+                            <Style TargetType="Image">
+                                <Setter Property="Source" Value="{Binding Icon}" />
+                            </Style>
+                        </Image.Style>
+                    </Image>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="0 -1.33 0 0"
+                        Style="{StaticResource StartText}"
+                        Text="{Binding Name}" />
+                    <TextBlock
+                        x:Name="Chevron"
+                        Grid.Column="2"
+                        Margin="8 0.67 8 0"
+                        FontSize="{DynamicResource StartChevronSize}"
+                        Style="{StaticResource StartGlyph}"
+                        Text="&#xE70D;"
+                        Visibility="Collapsed" />
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsFolder}" Value="True">
+                    <Setter TargetName="Chevron" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="Icon" Property="Source" Value="{StaticResource StartFolderIcon}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                    <Setter TargetName="Chevron" Property="Text" Value="&#xE70E;" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  A cell of the letter grid  -->
+        <DataTemplate x:Key="JumpCellTemplate" DataType="{x:Type sm:JumpCell}">
+            <Border
+                Width="48"
+                Height="48"
+                Margin="2"
+                sm:StartMenuReveal.IsEnabled="True"
+                Background="Transparent"
+                MouseLeftButtonUp="OnJumpCellClick">
+                <TextBlock
+                    x:Name="Text"
+                    HorizontalAlignment="Center"
+                    FontFamily="Segoe UI"
+                    FontSize="{DynamicResource StartJumpFontSize}"
+                    Foreground="{DynamicResource Win10StartText}"
+                    Style="{StaticResource StartGlyph}"
+                    Text="{Binding Text}" />
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsGlyph}" Value="True">
+                    <Setter TargetName="Text" Property="FontFamily" Value="{StaticResource StartIconFont}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                    <Setter TargetName="Text" Property="Foreground" Value="{DynamicResource Win10StartDisabledText}" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  A rail button: the accent bar and accent color when it is the current view, the label to the right  -->
+        <Style x:Key="RailButton" TargetType="Border">
+            <Setter Property="Height" Value="48" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="sm:StartMenuReveal.IsEnabled" Value="True" />
+        </Style>
+        <Style x:Key="RailGlyph" TargetType="TextBlock" BasedOn="{StaticResource StartGlyph}">
+            <Setter Property="Width" Value="16" />
+            <Setter Property="Margin" Value="17.33 0 0 0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+        <Style x:Key="RailLabel" TargetType="TextBlock" BasedOn="{StaticResource StartText}">
+            <Setter Property="Margin" Value="48 0 0 0" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="FontSize" Value="{DynamicResource StartRailFontSize}" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <!--  Views, right of the rail  -->
+        <Grid Margin="48 0 0 0">
+            <ScrollViewer
+                x:Name="AllAppsScroller"
+                Focusable="False"
+                HorizontalScrollBarVisibility="Disabled"
+                Template="{DynamicResource ScrollViewerControlTemplate}"
+                VerticalScrollBarVisibility="Auto">
+                <ItemsControl
+                    x:Name="AllAppsItems"
+                    Margin="0 7.33 0 0"
+                    Focusable="False"
+                    VirtualizingPanel.IsVirtualizing="False" />
+            </ScrollViewer>
+
+            <!--  The letter grid ("semantic zoom"), shown in place of the list after clicking a group header  -->
+            <Grid
+                x:Name="JumpGrid"
+                Background="Transparent"
+                MouseLeftButtonUp="OnJumpGridBackgroundClick"
+                Visibility="Collapsed">
+                <ItemsControl
+                    x:Name="JumpItems"
+                    Width="208"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Focusable="False"
+                    ItemTemplate="{StaticResource JumpCellTemplate}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </Grid>
+
+            <Grid x:Name="PinnedView" Visibility="Collapsed" />
+        </Grid>
+
+        <!--  The rail; expanding it shows the labels over the list  -->
+        <Border
+            x:Name="Rail"
+            Width="48"
+            HorizontalAlignment="Left"
+            Background="Transparent"
+            ClipToBounds="True"
+            MouseEnter="OnRailMouseEnter"
+            MouseLeave="OnRailMouseLeave">
+            <DockPanel LastChildFill="False">
+                <StackPanel Margin="0 4 0 0" DockPanel.Dock="Top">
+                    <Border MouseLeftButtonUp="OnMenuClick" Style="{StaticResource RailButton}">
+                        <Grid>
+                            <TextBlock Style="{StaticResource RailGlyph}" Text="&#xE700;" />
+                            <TextBlock
+                                FontWeight="Bold"
+                                Style="{StaticResource RailLabel}"
+                                Text="START" />
+                        </Grid>
+                    </Border>
+                    <Border
+                        x:Name="PinnedButton"
+                        MouseLeftButtonUp="OnPinnedClick"
+                        Style="{StaticResource RailButton}">
+                        <Grid>
+                            <Rectangle
+                                x:Name="PinnedBar"
+                                Width="4"
+                                HorizontalAlignment="Left"
+                                Fill="{DynamicResource StartAccentBrush}"
+                                Visibility="Hidden" />
+                            <TextBlock
+                                x:Name="PinnedGlyph"
+                                Style="{StaticResource RailGlyph}"
+                                Text="&#xECA5;" />
+                            <TextBlock
+                                x:Name="PinnedLabel"
+                                Style="{StaticResource RailLabel}"
+                                Text="Pinned tiles" />
+                        </Grid>
+                    </Border>
+                    <Border
+                        x:Name="AllAppsButton"
+                        MouseLeftButtonUp="OnAllAppsClick"
+                        Style="{StaticResource RailButton}">
+                        <Grid>
+                            <Rectangle
+                                x:Name="AllAppsBar"
+                                Width="4"
+                                HorizontalAlignment="Left"
+                                Fill="{DynamicResource StartAccentBrush}"
+                                Visibility="Hidden" />
+                            <TextBlock
+                                x:Name="AllAppsGlyph"
+                                Style="{StaticResource RailGlyph}"
+                                Text="&#xE71D;" />
+                            <TextBlock
+                                x:Name="AllAppsLabel"
+                                Style="{StaticResource RailLabel}"
+                                Text="All apps" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom">
+                    <Border MouseLeftButtonUp="OnAccountClick" Style="{StaticResource RailButton}">
+                        <Grid>
+                            <Ellipse
+                                x:Name="AccountPicture"
+                                Width="20"
+                                Height="20"
+                                Margin="15.33 -1.33 0 0"
+                                HorizontalAlignment="Left"
+                                Fill="{DynamicResource Win10StartDisabledText}" />
+                            <TextBlock
+                                x:Name="AccountName"
+                                Style="{StaticResource RailLabel}" />
+                        </Grid>
+                    </Border>
+                    <Border MouseLeftButtonUp="OnSettingsClick" Style="{StaticResource RailButton}">
+                        <Grid>
+                            <TextBlock Style="{StaticResource RailGlyph}" Text="&#xE713;" />
+                            <TextBlock Style="{StaticResource RailLabel}" Text="Settings" />
+                        </Grid>
+                    </Border>
+                    <Border MouseLeftButtonUp="OnPowerClick" Style="{StaticResource RailButton}">
+                        <Grid>
+                            <TextBlock Style="{StaticResource RailGlyph}" Text="&#xE7E8;" />
+                            <TextBlock Style="{StaticResource RailLabel}" Text="Power" />
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+    </Grid>
+</UserControl>

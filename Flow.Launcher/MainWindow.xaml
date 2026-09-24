@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:flowlauncher="clr-namespace:Flow.Launcher"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:startMenu="clr-namespace:Flow.Launcher.StartMenu"
     xmlns:ui="http://schemas.inkore.net/lib/ui/wpf/modern"
     xmlns:vm="clr-namespace:Flow.Launcher.ViewModel"
     Name="FlowMainWindow"
@@ -222,20 +223,13 @@
             </Grid.ColumnDefinitions>
 
             <!--  Windows 10 Start menu panel, shown in Start mode (Left Bottom position, empty query)  -->
-            <Border
+            <startMenu:StartMenuPanel
                 x:Name="StartMenuPanel"
                 Grid.Column="0"
                 Width="376"
                 Height="640"
                 VerticalAlignment="Bottom"
-                Background="{DynamicResource Win10StartBackground}"
-                Visibility="Collapsed">
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Foreground="{DynamicResource Color05B}"
-                    Text="Start menu" />
-            </Border>
+                Visibility="Collapsed" />
 
             <StackPanel
                 x:Name="MainStack"

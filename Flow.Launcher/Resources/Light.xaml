@@ -140,5 +140,9 @@
     <SolidColorBrush x:Key="Win10StartSecondaryText" Color="#616161" />
     <SolidColorBrush x:Key="Win10StartSecondaryTextSelected" Color="#585858" />
     <SolidColorBrush x:Key="Win10StartScrollThumb" Color="#616161" />
+    <SolidColorBrush x:Key="Win10StartText" Color="#000000" />
+    <SolidColorBrush x:Key="Win10StartDisabledText" Color="#A0A0A0" />
+    <SolidColorBrush x:Key="Win10StartPaneBackground" Color="#E6E6E6" />
+    <Color x:Key="Win10StartRevealColor">#000000</Color>
 
 </ResourceDictionary>

@@ -211,6 +211,7 @@ namespace Flow.Launcher
             // Reset preview
             _viewModel.ResetPreview();
             UpdateStartMode();
+            if (_startMode) StartMenuPanel.Reset();
 
             // Since the default main window visibility is visible, so we need set focus during startup
             QueryTextBox.Focus();
@@ -262,6 +263,7 @@ namespace Flow.Launcher
                                     // Reset preview
                                     _viewModel.ResetPreview();
                                     UpdateStartMode();
+                                    if (_startMode) StartMenuPanel.Reset();
 
                                     // Select last query if need
                                     if (!_viewModel.LastQuerySelected)
