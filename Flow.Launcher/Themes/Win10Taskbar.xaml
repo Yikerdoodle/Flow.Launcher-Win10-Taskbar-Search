@@ -54,7 +54,8 @@
         x:Key="WindowBorderStyle"
         BasedOn="{StaticResource BaseWindowBorderStyle}"
         TargetType="{x:Type Border}">
-        <Setter Property="BorderThickness" Value="1" />
+        <!--  One physical pixel at common scalings (layout rounding), like the Windows 10 search panel's outline  -->
+        <Setter Property="BorderThickness" Value="0.67" />
         <Setter Property="BorderBrush" Value="{DynamicResource SystemThemeBorder}" />
         <Setter Property="CornerRadius" Value="0" />
         <Setter Property="Background" Value="{DynamicResource Color01B}" />
@@ -67,6 +68,15 @@
     </Style>
     <Style x:Key="WindowRadius" TargetType="{x:Type Border}">
         <Setter Property="CornerRadius" Value="0" />
+    </Style>
+    <!--  Like the Windows 10 taskbar search box: a 2 px border in the system accent color, which follows accent changes  -->
+    <SolidColorBrush x:Key="QueryBoxAccentBorderBrush" Color="{m:DynamicColor SystemAccentColor}" />
+    <Style
+        x:Key="QueryBoxBgStyle"
+        BasedOn="{StaticResource BaseQueryBoxBgStyle}"
+        TargetType="{x:Type Border}">
+        <Setter Property="BorderThickness" Value="2" />
+        <Setter Property="BorderBrush" Value="{DynamicResource QueryBoxAccentBorderBrush}" />
     </Style>
 
 
@@ -165,7 +175,8 @@
         BasedOn="{StaticResource BaseSeparatorStyle}"
         TargetType="{x:Type Rectangle}">
         <Setter Property="Fill" Value="{DynamicResource SeparatorForeground}" />
-        <Setter Property="Height" Value="1" />
+        <!--  No line between the results and the query box: its accent border separates them, as in Windows 10  -->
+        <Setter Property="Height" Value="0" />
         <Setter Property="Margin" Value="0" />
     </Style>
     <Style

@@ -18,7 +18,7 @@ to review or rebase onto a newer Flow Launcher release.
 | **Top apps** on the home page. The Program plugin shows the 6 most-launched apps, using Windows' own UserAssist launch counts. | `Plugin.Program/TopApps.cs` |
 | **Recent files** on the home page. The Explorer plugin shows the 8 most recent files from the Windows Recent folder. | `Plugin.Explorer/Search/RecentFiles.cs` |
 | **Pin to taskbar / Unpin from taskbar** at the top of the right-click menu of apps (desktop and Store) and pinnable files, using Windows' own wording and the Windows 10 pin/unpin symbols. Unpinning is silent, through the documented `IStartMenuPinnedList` API, unless the item also has a Start menu tile (that API would remove the tile too). Windows only allows pinning from Explorer's own menu, so Flow selects the item in an Explorer window and chooses Explorer's menu command, with the window and menu made fully transparent the moment Explorer creates them. | `Plugin/SharedCommands/TaskbarPin.cs`, Program and Explorer plugins |
-| **Windows 10 Taskbar** theme: square corners, taskbar-height search box, search icon on the left, follows system light/dark. | `Themes/Win10Taskbar.xaml` |
+| **Windows 10 Taskbar** theme: square corners, taskbar-height search box with a 2 px border in the system accent color (updates when the accent color changes), search icon on the left, one-pixel window outline, follows system light/dark. | `Themes/Win10Taskbar.xaml` |
 
 ## Settings used with this fork
 
