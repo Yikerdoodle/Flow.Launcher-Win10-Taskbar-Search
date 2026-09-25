@@ -245,6 +245,7 @@ namespace Flow.Launcher
 
                 AutoStartup();
                 AutoUpdates();
+                TaskbarSearchButton.SetUpOnce(_settings);
 
                 API.SaveAppAllSettings();
                 API.LogInfo(ClassName, "End Flow Launcher startup ------------------------------------------------------");

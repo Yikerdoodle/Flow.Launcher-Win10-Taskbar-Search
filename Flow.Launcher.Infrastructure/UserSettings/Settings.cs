@@ -523,6 +523,11 @@ namespace Flow.Launcher.Infrastructure.UserSettings
         /// </summary>
         public bool ShowStartMenuPanel { get; set; } = false;
 
+        /// <summary>
+        /// Whether Flow has pinned its "Type here to search" button to the taskbar (done once, on first start)
+        /// </summary>
+        public bool TaskbarSearchButtonSetUp { get; set; } = false;
+
         public int CustomScreenNumber { get; set; } = 1;
 
         public bool IgnoreHotkeysOnFullscreen { get; set; }
