@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="Flow.Launcher.StartMenu.StartMenuPanel"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -19,6 +19,7 @@
         <FontFamily x:Key="StartIconFont">Segoe MDL2 Assets</FontFamily>
         <SolidColorBrush x:Key="StartAccentBrush" Color="{m:DynamicColor SystemAccentColor}" />
         <SolidColorBrush x:Key="StartSelectedBrush" Color="{m:DynamicColor SystemAccentColorLight2}" />
+        <SolidColorBrush x:Key="StartLinkBrush" Color="{m:DynamicColor SystemAccentColorLight3}" />
 
         <!--  Start's own flat folder icon (not Explorer's), drawn from the measured pixels: a darker tab, the back
               edge, and the front with a light-to-dark diagonal gradient  -->
@@ -398,6 +399,128 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+            </Border>
+
+            <!--  The account box, measured from Start's: 358.67 x 173.33 with the same outline, 4 above the account
+                  button. The Microsoft logo and name, the email and "My Microsoft account" only show for a Microsoft
+                  account. Positions are from the box's inside edge  -->
+            <Border
+                x:Name="AccountFlyout"
+                Width="358.67"
+                Height="173.33"
+                Margin="0 0 0 148"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource Win10StartFlyoutBackground}"
+                BorderBrush="{DynamicResource Win10StartFlyoutBorder}"
+                BorderThickness="1.33"
+                MouseLeftButtonUp="OnFlyoutClick"
+                Visibility="Collapsed">
+                <Grid>
+                    <!--  Microsoft logo: four 8.67 squares 1.33 apart, and the wordmark  -->
+                    <Grid
+                        x:Name="MicrosoftLogo"
+                        Width="18.67"
+                        Height="18.67"
+                        Margin="17.33 20.67 0 0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top">
+                        <Rectangle Width="8.67" Height="8.67" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="#F25022" />
+                        <Rectangle Width="8.67" Height="8.67" HorizontalAlignment="Right" VerticalAlignment="Top" Fill="#7FBA00" />
+                        <Rectangle Width="8.67" Height="8.67" HorizontalAlignment="Left" VerticalAlignment="Bottom" Fill="#00A4EF" />
+                        <Rectangle Width="8.67" Height="8.67" HorizontalAlignment="Right" VerticalAlignment="Bottom" Fill="#FFB900" />
+                    </Grid>
+                    <TextBlock
+                        x:Name="MicrosoftWordmark"
+                        Margin="41.33 16.17 0 0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontFamily="Segoe UI"
+                        FontSize="{DynamicResource StartAccountSmallFontSize}"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource Win10StartSecondaryAccountText}"
+                        Text="Microsoft" />
+
+                    <Border
+                        Margin="203.33 11.33 0 0"
+                        Padding="4"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        sm:StartMenuReveal.IsEnabled="True"
+                        Background="Transparent"
+                        MouseLeftButtonUp="OnSignOutClick">
+                        <TextBlock
+                            FontFamily="Segoe UI"
+                            FontSize="{DynamicResource StartAccountSmallFontSize}"
+                            Foreground="{DynamicResource Win10StartText}"
+                            Text="Sign out" />
+                    </Border>
+                    <Border
+                        Margin="309.07 8.54 0 0"
+                        Padding="4 8 4 8"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        sm:StartMenuReveal.IsEnabled="True"
+                        Background="Transparent"
+                        MouseLeftButtonUp="OnAccountMoreClick">
+                        <TextBlock
+                            FontFamily="{StaticResource StartIconFont}"
+                            FontSize="{DynamicResource StartAccountNameFontSize}"
+                            Foreground="{DynamicResource Win10StartText}"
+                            Text="&#xE712;" />
+                    </Border>
+
+                    <Ellipse
+                        x:Name="AccountBigPicture"
+                        Width="58"
+                        Height="58"
+                        Margin="16 77.33 0 0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Fill="{DynamicResource Win10StartDisabledText}" />
+                    <TextBlock
+                        x:Name="AccountFullName"
+                        Width="260"
+                        Margin="86.33 59.67 0 0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontFamily="Segoe UI"
+                        FontSize="{DynamicResource StartAccountNameFontSize}"
+                        FontWeight="Bold"
+                        Foreground="{DynamicResource Win10StartText}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        x:Name="AccountEmail"
+                        Width="259.33"
+                        Margin="86 93.8 0 0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        FontFamily="Segoe UI"
+                        FontSize="{DynamicResource StartFontSize}"
+                        Foreground="{DynamicResource Win10StartSecondaryAccountText}"
+                        TextTrimming="CharacterEllipsis" />
+                    <TextBlock
+                        x:Name="MicrosoftAccountLink"
+                        Margin="85.73 123.27 0 0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Cursor="Hand"
+                        FontFamily="Segoe UI"
+                        FontSize="{DynamicResource StartFontSize}"
+                        Foreground="{DynamicResource StartLinkBrush}"
+                        MouseLeftButtonUp="OnMicrosoftAccountClick"
+                        Text="My Microsoft account">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="TextDecorations" Value="Underline" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

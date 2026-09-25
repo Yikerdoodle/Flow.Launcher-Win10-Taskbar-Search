@@ -260,7 +260,7 @@ public sealed class AllAppsList
         return char.IsLetter(first) ? OtherKey : "&";
     }
 
-    private static string HeaderText(string key) => key == OtherKey ? "" : key;
+    private static string HeaderText(string key) => key == OtherKey ? "\uE774" : key;
 
     private void LoadIconsAsync()
     {
@@ -322,8 +322,8 @@ public sealed class JumpCell
 
     public string Text => Key switch
     {
-        AllAppsList.RecentKey => "",
-        AllAppsList.OtherKey => "",
+        AllAppsList.RecentKey => "\uE823",
+        AllAppsList.OtherKey => "\uE774",
         _ => Key
     };
 

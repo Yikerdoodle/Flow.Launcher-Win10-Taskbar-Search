@@ -112,6 +112,8 @@ public partial class StartMenuPanel : UserControl
         Resources["StartRailFontSize"] = 17 * scale;
         Resources["StartJumpFontSize"] = 20 * scale;
         Resources["StartChevronSize"] = 13 * scale;
+        Resources["StartAccountSmallFontSize"] = 16 * scale;
+        Resources["StartAccountNameFontSize"] = 18 * scale;
     }
 
     #endregion
@@ -278,21 +280,26 @@ public partial class StartMenuPanel : UserControl
     private void LoadAccount()
     {
         AccountName.Text = DisplayName();
+        if (AccountPictureBrush(AccountPicture.Width) is { } picture) AccountPicture.Fill = picture;
+    }
 
+    // The account picture for a circle of the given size. Windows keeps it at several sizes; this takes the smallest
+    // that is big enough
+    private Brush AccountPictureBrush(double size)
+    {
         try
         {
             var sid = System.Security.Principal.WindowsIdentity.GetCurrent().User?.Value;
-            if (sid == null) return;
+            if (sid == null) return null;
 
-            // Windows keeps the account picture at several sizes; take the smallest that is big enough
-            var pixels = 20 * VisualTreeHelper.GetDpi(this).DpiScaleX;
+            var pixels = size * VisualTreeHelper.GetDpi(this).DpiScaleX;
             using var key = Registry.LocalMachine.OpenSubKey(
                 @"SOFTWARE\Microsoft\Windows\CurrentVersion\AccountPicture\Users\" + sid);
             var path = new[] { 32, 40, 48, 64, 96, 192, 208, 240, 424, 448, 1080 }
-                .Where(size => size >= pixels)
-                .Select(size => key?.GetValue("Image" + size) as string)
+                .Where(s => s >= pixels)
+                .Select(s => key?.GetValue("Image" + s) as string)
                 .FirstOrDefault(p => p != null && System.IO.File.Exists(p));
-            if (path == null) return;
+            if (path == null) return null;
 
             var image = new BitmapImage();
             image.BeginInit();
@@ -300,11 +307,12 @@ public partial class StartMenuPanel : UserControl
             image.UriSource = new Uri(path);
             image.EndInit();
             image.Freeze();
-            AccountPicture.Fill = new ImageBrush(image) { Stretch = Stretch.UniformToFill };
+            return new ImageBrush(image) { Stretch = Stretch.UniformToFill };
         }
         catch (Exception e)
         {
             App.API.LogException(nameof(StartMenuPanel), "Failed to load the account picture", e);
+            return null;
         }
     }
 
@@ -319,16 +327,57 @@ public partial class StartMenuPanel : UserControl
     // its menus 4.67 above the button
     private const double MenuGap = 4.67;
 
-    private void OnAccountClick(object sender, MouseButtonEventArgs e)
+    // The account box, read fresh each time it opens: with a Microsoft account, the Microsoft logo, the account's
+    // name and email and "My Microsoft account"; with a local account, just the name, and the logo's place blank
+    private async void OnAccountClick(object sender, MouseButtonEventArgs e)
     {
-        ShowMenu(3 * RailWidth + MenuGap,
+        if (AccountBigPicture.Fill is not ImageBrush && AccountPictureBrush(AccountBigPicture.Width) is { } picture)
+        {
+            AccountBigPicture.Fill = picture;
+        }
+
+        var account = await AccountInfo.GetAsync();
+        var microsoft = account.IsMicrosoftAccount ? Visibility.Visible : Visibility.Hidden;
+        MicrosoftLogo.Visibility = microsoft;
+        MicrosoftWordmark.Visibility = microsoft;
+        MicrosoftAccountLink.Visibility = microsoft;
+        AccountFullName.Text = account.Name;
+        AccountEmail.Text = account.Email ?? string.Empty;
+
+        Flyout.Visibility = Visibility.Collapsed;
+        AccountFlyout.Visibility = Visibility.Visible;
+        FlyoutLayer.Visibility = Visibility.Visible;
+    }
+
+    private void OnSignOutClick(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+        CloseMenu();
+        ExitWindowsEx(EWX_LOGOFF, 0);
+    }
+
+    private void OnMicrosoftAccountClick(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+        CloseMenu();
+        Launch("https://account.microsoft.com/");
+    }
+
+    // The account box's "..." menu, under the dots and lined up with the box's right edge
+    private void OnAccountMoreClick(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+        var dots = (FrameworkElement)sender;
+        var box = AccountFlyout.TransformToAncestor(this).Transform(new Point(0, 0));
+        var below = dots.TransformToAncestor(this).Transform(new Point(0, dots.ActualHeight));
+        AccountFlyout.Visibility = Visibility.Collapsed;
+        ShowMenu(new Thickness(box.X + AccountFlyout.Width - Flyout.Width, below.Y, 0, 0), VerticalAlignment.Top,
             new StartFlyoutItem(null, "Change account settings", () => Launch("ms-settings:yourinfo")),
             new StartFlyoutItem(null, "Lock", () =>
             {
                 HideFlow();
                 LockWorkStation();
-            }),
-            new StartFlyoutItem(null, "Sign out", () => ExitWindowsEx(EWX_LOGOFF, 0)));
+            }));
     }
 
     private void OnSettingsClick(object sender, MouseButtonEventArgs e) =>
@@ -341,7 +390,7 @@ public partial class StartMenuPanel : UserControl
         var items = new List<StartFlyoutItem>();
         if (PowerMenuOption("ShowLockOption", true))
         {
-            items.Add(new StartFlyoutItem("", "Lock", () =>
+            items.Add(new StartFlyoutItem("\uE72E", "Lock", () =>
             {
                 HideFlow();
                 LockWorkStation();
@@ -349,7 +398,7 @@ public partial class StartMenuPanel : UserControl
         }
         if (PowerMenuOption("ShowSleepOption", true))
         {
-            items.Add(new StartFlyoutItem("", "Sleep", () =>
+            items.Add(new StartFlyoutItem("\uE708", "Sleep", () =>
             {
                 HideFlow();
                 SetSuspendState(false, false, false);
@@ -357,15 +406,15 @@ public partial class StartMenuPanel : UserControl
         }
         if (PowerMenuOption("ShowHibernateOption", false))
         {
-            items.Add(new StartFlyoutItem("", "Hibernate", () =>
+            items.Add(new StartFlyoutItem("\uE708", "Hibernate", () =>
             {
                 HideFlow();
                 SetSuspendState(true, false, false);
             }));
         }
-        items.Add(new StartFlyoutItem("", "Shut down",
+        items.Add(new StartFlyoutItem("\uE7E8", "Shut down",
             () => Process.Start(new ProcessStartInfo("shutdown.exe", "/s /t 0") { CreateNoWindow = true })));
-        items.Add(new StartFlyoutItem("", "Restart",
+        items.Add(new StartFlyoutItem("\uE777", "Restart",
             () => Process.Start(new ProcessStartInfo("shutdown.exe", "/r /t 0") { CreateNoWindow = true })));
 
         ShowMenu(RailWidth + MenuGap, items.ToArray());
@@ -385,10 +434,16 @@ public partial class StartMenuPanel : UserControl
         }
     }
 
-    private void ShowMenu(double bottom, params StartFlyoutItem[] items)
+    // A menu above a rail button, from the panel's left edge
+    private void ShowMenu(double bottom, params StartFlyoutItem[] items) =>
+        ShowMenu(new Thickness(0, 0, 0, bottom), VerticalAlignment.Bottom, items);
+
+    private void ShowMenu(Thickness margin, VerticalAlignment alignment, params StartFlyoutItem[] items)
     {
         FlyoutItems.ItemsSource = items;
-        Flyout.Margin = new Thickness(0, 0, 0, bottom);
+        Flyout.Margin = margin;
+        Flyout.VerticalAlignment = alignment;
+        Flyout.Visibility = Visibility.Visible;
         FlyoutLayer.Visibility = Visibility.Visible;
     }
 
@@ -397,6 +452,7 @@ public partial class StartMenuPanel : UserControl
         if (FlyoutLayer.Visibility != Visibility.Visible) return;
 
         FlyoutLayer.Visibility = Visibility.Collapsed;
+        AccountFlyout.Visibility = Visibility.Collapsed;
         FlyoutItems.ItemsSource = null;
 
         // The rail stays expanded under an open menu; now collapse it unless the mouse is on it

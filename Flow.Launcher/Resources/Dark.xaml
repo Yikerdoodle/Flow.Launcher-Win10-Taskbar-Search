@@ -157,6 +157,7 @@
     <SolidColorBrush x:Key="Win10StartPaneBackground" Color="#383838" />
     <SolidColorBrush x:Key="Win10StartFlyoutBackground" Color="#2A2A2A" />
     <SolidColorBrush x:Key="Win10StartFlyoutBorder" Color="#1D1D1D" />
+    <SolidColorBrush x:Key="Win10StartSecondaryAccountText" Color="#CDCDCD" />
     <Color x:Key="Win10StartRevealColor">#FFFFFF</Color>
 
 </ResourceDictionary>
