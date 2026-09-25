@@ -348,5 +348,57 @@
                 </StackPanel>
             </DockPanel>
         </Border>
+
+        <!--  The Power and account menus, drawn over the panel like Start's: 258 wide with a thin dark outline, rows
+              44 high with the icon 16 in and the label 44 in, 4.67 above the button that opened it. Clicking
+              anywhere else closes it  -->
+        <Grid
+            x:Name="FlyoutLayer"
+            Background="Transparent"
+            MouseLeftButtonUp="OnFlyoutLayerClick"
+            Visibility="Collapsed">
+            <Border
+                x:Name="Flyout"
+                Width="258"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Bottom"
+                Background="{DynamicResource Win10StartFlyoutBackground}"
+                BorderBrush="{DynamicResource Win10StartFlyoutBorder}"
+                BorderThickness="1.33"
+                MouseLeftButtonUp="OnFlyoutClick"
+                Padding="0 5.33 0 2.67">
+                <ItemsControl x:Name="FlyoutItems" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type sm:StartFlyoutItem}">
+                            <Border
+                                Height="44"
+                                MouseLeftButtonUp="OnFlyoutItemClick"
+                                Style="{StaticResource RailButton}">
+                                <Grid>
+                                    <TextBlock
+                                        Width="16"
+                                        Margin="16 0 0 0"
+                                        HorizontalAlignment="Left"
+                                        FontSize="16"
+                                        Style="{StaticResource StartGlyph}"
+                                        Text="{Binding Glyph}" />
+                                    <TextBlock
+                                        x:Name="Label"
+                                        Margin="44 0 12 0"
+                                        Style="{StaticResource StartText}"
+                                        Text="{Binding Text}" />
+                                </Grid>
+                            </Border>
+                            <DataTemplate.Triggers>
+                                <!--  Text-only menus (the account menu) start their labels where the icons would be  -->
+                                <DataTrigger Binding="{Binding Glyph}" Value="{x:Null}">
+                                    <Setter TargetName="Label" Property="Margin" Value="16 0 12 0" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

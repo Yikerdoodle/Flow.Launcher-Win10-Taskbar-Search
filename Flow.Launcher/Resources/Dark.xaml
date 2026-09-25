@@ -148,11 +148,15 @@
     <SolidColorBrush x:Key="Win10StartSecondaryText" Color="#ACACAC" />
     <SolidColorBrush x:Key="Win10StartSecondaryTextSelected" Color="#B4B4B4" />
     <SolidColorBrush x:Key="Win10StartScrollThumb" Color="#ABABAB" />
-    <!--  Start menu panel: text, letters with no apps in the letter grid, the rail when expanded over the list, and
-          the color of the hover light (Windows' reveal highlight)  -->
+    <!--  Start menu panel: text, letters with no apps in the letter grid, the rail when expanded over the list, the
+          Power and account menus with their outline, and the color of the hover light (Windows' reveal highlight).
+          Start's own colors vary with what is behind it, so the rail and menus keep their measured difference from
+          the list: the expanded rail 9 lighter, the menus 5 darker, the menu outline 18 darker  -->
     <SolidColorBrush x:Key="Win10StartText" Color="#FFFFFF" />
     <SolidColorBrush x:Key="Win10StartDisabledText" Color="#585858" />
-    <SolidColorBrush x:Key="Win10StartPaneBackground" Color="#2B2B2B" />
+    <SolidColorBrush x:Key="Win10StartPaneBackground" Color="#383838" />
+    <SolidColorBrush x:Key="Win10StartFlyoutBackground" Color="#2A2A2A" />
+    <SolidColorBrush x:Key="Win10StartFlyoutBorder" Color="#1D1D1D" />
     <Color x:Key="Win10StartRevealColor">#FFFFFF</Color>
 
 </ResourceDictionary>

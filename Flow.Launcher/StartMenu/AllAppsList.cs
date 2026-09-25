@@ -334,6 +334,9 @@ public sealed class JumpCell
     public bool IsEnabled { get; init; }
 }
 
+/// <summary>A row of the Power or account menu: an optional Segoe MDL2 icon, the label, and what it does.</summary>
+public sealed record StartFlyoutItem(string Glyph, string Text, Action Action);
+
 /// <summary>Stored data of the Start menu: when each app was first seen, for Recently added.</summary>
 public class StartMenuApps
 {

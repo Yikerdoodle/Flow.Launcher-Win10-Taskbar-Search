@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -63,6 +64,7 @@ public partial class StartMenuPanel : UserControl
     {
         _railHoverTimer.Stop();
         SetRailExpanded(false, animate: false);
+        FlyoutLayer.Visibility = Visibility.Collapsed;
         JumpGrid.Visibility = Visibility.Collapsed;
         AllAppsScroller.Visibility = Visibility.Visible;
         AllAppsScroller.ScrollToTop();
@@ -178,7 +180,8 @@ public partial class StartMenuPanel : UserControl
     private void OnRailMouseLeave(object sender, MouseEventArgs e)
     {
         _railHoverTimer.Stop();
-        if (_railExpanded) SetRailExpanded(false);
+        // An open menu covers the rail; the rail stays as it is until the menu closes
+        if (_railExpanded && FlyoutLayer.Visibility != Visibility.Visible) SetRailExpanded(false);
     }
 
     private void OnMenuClick(object sender, MouseButtonEventArgs e)
@@ -312,57 +315,115 @@ public partial class StartMenuPanel : UserControl
         return GetUserNameEx(NameDisplay, name, ref length) && name.Length > 0 ? name.ToString() : Environment.UserName;
     }
 
+    // Bottom of the rail buttons: the account button's top is 144 above the panel's bottom, Power's 48; Start opens
+    // its menus 4.67 above the button
+    private const double MenuGap = 4.67;
+
     private void OnAccountClick(object sender, MouseButtonEventArgs e)
     {
-        ShowMenu((FrameworkElement)sender,
-            ("Change account settings", () => Launch("ms-settings:yourinfo")),
-            ("Lock", () =>
+        ShowMenu(3 * RailWidth + MenuGap,
+            new StartFlyoutItem(null, "Change account settings", () => Launch("ms-settings:yourinfo")),
+            new StartFlyoutItem(null, "Lock", () =>
             {
                 HideFlow();
                 LockWorkStation();
             }),
-            ("Sign out", () => ExitWindowsEx(EWX_LOGOFF, 0)));
+            new StartFlyoutItem(null, "Sign out", () => ExitWindowsEx(EWX_LOGOFF, 0)));
     }
 
     private void OnSettingsClick(object sender, MouseButtonEventArgs e) =>
         Launch(@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel");
 
+    // The same options as Start's Power menu, which follows "Show in Power menu" in Control Panel's power button
+    // settings: Lock and Sleep unless turned off, Hibernate only when turned on
     private void OnPowerClick(object sender, MouseButtonEventArgs e)
     {
-        ShowMenu((FrameworkElement)sender,
-            ("Sleep", () =>
+        var items = new List<StartFlyoutItem>();
+        if (PowerMenuOption("ShowLockOption", true))
+        {
+            items.Add(new StartFlyoutItem("", "Lock", () =>
+            {
+                HideFlow();
+                LockWorkStation();
+            }));
+        }
+        if (PowerMenuOption("ShowSleepOption", true))
+        {
+            items.Add(new StartFlyoutItem("", "Sleep", () =>
             {
                 HideFlow();
                 SetSuspendState(false, false, false);
-            }),
-            ("Shut down", () => Process.Start(new ProcessStartInfo("shutdown.exe", "/s /t 0") { CreateNoWindow = true })),
-            ("Restart", () => Process.Start(new ProcessStartInfo("shutdown.exe", "/r /t 0") { CreateNoWindow = true })));
+            }));
+        }
+        if (PowerMenuOption("ShowHibernateOption", false))
+        {
+            items.Add(new StartFlyoutItem("", "Hibernate", () =>
+            {
+                HideFlow();
+                SetSuspendState(true, false, false);
+            }));
+        }
+        items.Add(new StartFlyoutItem("", "Shut down",
+            () => Process.Start(new ProcessStartInfo("shutdown.exe", "/s /t 0") { CreateNoWindow = true })));
+        items.Add(new StartFlyoutItem("", "Restart",
+            () => Process.Start(new ProcessStartInfo("shutdown.exe", "/r /t 0") { CreateNoWindow = true })));
+
+        ShowMenu(RailWidth + MenuGap, items.ToArray());
     }
 
-    private void ShowMenu(FrameworkElement target, params (string Text, Action Action)[] items)
+    private static bool PowerMenuOption(string name, bool defaultValue)
     {
-        var menu = new ContextMenu
+        try
         {
-            PlacementTarget = target,
-            Placement = System.Windows.Controls.Primitives.PlacementMode.Top
-        };
-        foreach (var (text, action) in items)
-        {
-            var menuItem = new MenuItem { Header = text };
-            menuItem.Click += (_, _) =>
-            {
-                try
-                {
-                    action();
-                }
-                catch (Exception e)
-                {
-                    App.API.LogException(nameof(StartMenuPanel), $"Failed to run {text}", e);
-                }
-            };
-            menu.Items.Add(menuItem);
+            var value = Registry.GetValue(
+                @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FlyoutMenuSettings", name, null);
+            return value is int number ? number != 0 : defaultValue;
         }
-        menu.IsOpen = true;
+        catch
+        {
+            return defaultValue;
+        }
+    }
+
+    private void ShowMenu(double bottom, params StartFlyoutItem[] items)
+    {
+        FlyoutItems.ItemsSource = items;
+        Flyout.Margin = new Thickness(0, 0, 0, bottom);
+        FlyoutLayer.Visibility = Visibility.Visible;
+    }
+
+    private void CloseMenu()
+    {
+        if (FlyoutLayer.Visibility != Visibility.Visible) return;
+
+        FlyoutLayer.Visibility = Visibility.Collapsed;
+        FlyoutItems.ItemsSource = null;
+
+        // The rail stays expanded under an open menu; now collapse it unless the mouse is on it
+        var mouse = Mouse.GetPosition(Rail);
+        var overRail = mouse.X >= 0 && mouse.Y >= 0 && mouse.X < Rail.ActualWidth && mouse.Y < Rail.ActualHeight;
+        if (_railExpanded && !overRail) SetRailExpanded(false);
+    }
+
+    private void OnFlyoutLayerClick(object sender, MouseButtonEventArgs e) => CloseMenu();
+
+    // Clicks between the menu's rows don't close it
+    private void OnFlyoutClick(object sender, MouseButtonEventArgs e) => e.Handled = true;
+
+    private void OnFlyoutItemClick(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+        if ((sender as FrameworkElement)?.DataContext is not StartFlyoutItem item) return;
+
+        CloseMenu();
+        try
+        {
+            item.Action();
+        }
+        catch (Exception ex)
+        {
+            App.API.LogException(nameof(StartMenuPanel), $"Failed to run {item.Text}", ex);
+        }
     }
 
     #endregion
