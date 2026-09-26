@@ -284,6 +284,12 @@ namespace Flow.Launcher
                                     // Update activate times
                                     _settings.ActivateTimes++;
                                 }
+                                else
+                                {
+                                    _lastHiddenAt = DateTime.UtcNow;
+                                    _lastHiddenInSearch = !_startMode;
+                                    _searchLayoutRequested = false;
+                                }
                             });
                             break;
                         }
@@ -1183,11 +1189,56 @@ namespace Flow.Launcher
 
         private bool _startMode;
 
+        /// <summary>
+        /// Command line argument of the taskbar search button: open straight into the search layout.
+        /// </summary>
+        public const string SearchArgument = "--search";
+
+        // Shown by the taskbar search button: the search layout until the window hides, even with an empty query
+        private bool _searchLayoutRequested;
+
+        // When and in which layout the window last hid, see ToggleSearch
+        private DateTime _lastHiddenAt = DateTime.MinValue;
+        private bool _lastHiddenInSearch;
+
+        /// <summary>
+        /// The taskbar search button: opens Flow in the search layout (search box and preview, no Start menu), like
+        /// Windows' search button, or closes it when the search layout is open.
+        /// </summary>
+        public void ToggleSearch()
+        {
+            // Clicking the taskbar takes the focus from Flow first, so an open search layout has already hidden
+            // itself by the time the click arrives; that click means close, as with Windows' search button
+            if (!_viewModel.MainWindowVisibilityStatus && _lastHiddenInSearch &&
+                DateTime.UtcNow - _lastHiddenAt < TimeSpan.FromMilliseconds(500))
+            {
+                return;
+            }
+
+            if (_viewModel.MainWindowVisibilityStatus && !_startMode)
+            {
+                _viewModel.Hide();
+                return;
+            }
+
+            _searchLayoutRequested = true;
+            if (_viewModel.MainWindowVisibilityStatus)
+            {
+                UpdateStartMode();
+                QueryTextBox.Focus();
+            }
+            else
+            {
+                _viewModel.Show();
+            }
+        }
+
         // Start mode: with the Left Bottom position and an empty query, the Start menu panel is shown beside the home
         // results, without the query box and the preview. Typing switches to the normal search layout.
         private void UpdateStartMode()
         {
-            var startMode = IsBottomAnchored && _settings.ShowStartMenuPanel && string.IsNullOrEmpty(_viewModel.QueryText);
+            var startMode = IsBottomAnchored && _settings.ShowStartMenuPanel && !_searchLayoutRequested &&
+                            string.IsNullOrEmpty(_viewModel.QueryText);
 
             // Re-applied every time Start mode is wanted (showing the window resets the preview), but the search
             // layout is only restored once, so a preview hidden by hand while searching stays hidden

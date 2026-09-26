@@ -27,19 +27,29 @@ public static class TaskbarSearchButton
     private static readonly TimeSpan StartDelay = TimeSpan.FromSeconds(5);
 
     /// <summary>
-    /// On first start: replaces a pinned Flow.Launcher.exe with the "Type here to search" button, or pins it. Runs
-    /// once; unpinning the button later is respected.
+    /// On every start, brings the button's shortcut (and the taskbar's copy of it, if pinned) up to date with this
+    /// Flow. On first start, also replaces a pinned Flow.Launcher.exe with the button, or pins it; that runs once,
+    /// so unpinning the button later is respected.
     /// </summary>
-    public static void SetUpOnce(Settings settings)
+    public static void SetUp(Settings settings)
     {
-        if (settings.TaskbarSearchButtonSetUp) return;
-
         var thread = new Thread(() =>
         {
             Thread.Sleep(StartDelay);
             try
             {
-                var shortcut = CreateShortcut();
+                var name = ShortcutName();
+                var shortcut = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "FlowLauncher", name);
+                Directory.CreateDirectory(Path.GetDirectoryName(shortcut)!);
+                WriteShortcut(shortcut);
+
+                // The taskbar starts its own copy of a pinned shortcut
+                var pinned = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                    @"Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar", name);
+                if (File.Exists(pinned)) WriteShortcut(pinned);
+
+                if (settings.TaskbarSearchButtonSetUp) return;
                 App.API.LogInfo(nameof(TaskbarSearchButton), $"Shortcut ready: {shortcut}");
 
                 // The plain Flow.Launcher.exe pin would be a second button with the old name
@@ -74,22 +84,24 @@ public static class TaskbarSearchButton
         thread.Start();
     }
 
-    // %LOCALAPPDATA%\FlowLauncher\Type here to search.lnk, created or updated to point at this Flow
-    private static string CreateShortcut()
+    // "Type here to search.lnk": Flow's translation of the search box text, which becomes the tooltip
+    private static string ShortcutName()
     {
         var name = App.API.GetTranslation("queryTextBoxPlaceholder");
         name = new string(name.Where(c => !Path.GetInvalidFileNameChars().Contains(c)).ToArray()).Trim();
         if (string.IsNullOrEmpty(name)) name = "Type here to search";
+        return name + ".lnk";
+    }
 
-        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FlowLauncher");
-        Directory.CreateDirectory(folder);
-        var path = Path.Combine(folder, name + ".lnk");
-
+    // Writes the button's shortcut: this Flow with --search (open straight into the search layout) and the button's
+    // own AppUserModelID
+    private static void WriteShortcut(string path)
+    {
         var link = (IShellLinkW)new ShellLink();
         try
         {
             link.SetPath(Constant.ExecutablePath);
+            link.SetArguments(MainWindow.SearchArgument);
             link.SetWorkingDirectory(Constant.ProgramDirectory);
             link.SetIconLocation(Constant.ExecutablePath, 0);
 
@@ -112,8 +124,6 @@ public static class TaskbarSearchButton
         {
             Marshal.ReleaseComObject(link);
         }
-
-        return path;
     }
 
     #region Interop

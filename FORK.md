@@ -30,6 +30,7 @@ These are ordinary Flow Launcher settings; nothing here is hard-coded:
 - **General → Query search window:** *Empty last query* (opens blank each time)
 - **Hotkey:** `LWin` (tapping the Windows key on its own opens Flow)
 - **Appearance:** theme *Windows 10 Taskbar*, drop shadow off, clock/date off
+- **General → Show result hotkeys:** off (no "Alt + 1" labels on results)
 - **Plugins → Explorer:** index search engine and path enumeration engine set to *Everything*
 - **Plugins → Windows Settings:** action keyword `*` (Settings pages show up without a prefix)
 - **Plugin priorities:** Program 4, Windows Settings 3, System Commands 2, Web Searches -5

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.IO.Pipes;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ namespace Flow.Launcher.Helper
 {
     public interface ISingleInstanceApp
     {
-        void OnSecondAppStarted();
+        void OnSecondAppStarted(string[] args);
     }
 
     /// <summary>
@@ -38,6 +39,11 @@ namespace Flow.Launcher.Helper
         /// </summary>
         private const string ChannelNameSuffix = "SingeInstanceIPCChannel";
         private const string InstanceMutexName = "Flow.Launcher_Unique_Application_Mutex";
+
+        /// <summary>
+        /// Separates the second instance's command line arguments on the pipe.
+        /// </summary>
+        private const char Separator = '\n';
 
         /// <summary>
         /// Application mutex.
@@ -69,7 +75,9 @@ namespace Flow.Launcher.Helper
             }
             else
             {
-                _ = SignalFirstInstanceAsync(channelName);
+                // Wait for the arguments to be delivered: the process ends as soon as this returns
+                var args = Environment.GetCommandLineArgs()[1..];
+                SignalFirstInstanceAsync(channelName, args).Wait(TimeSpan.FromSeconds(2));
                 return false;
             }
         }
@@ -99,8 +107,16 @@ namespace Flow.Launcher.Helper
                 // Wait for connection to the pipe
                 await pipeServer.WaitForConnectionAsync();
 
+                // The second instance sends its command line arguments, one per line (none from older versions)
+                string[] args;
+                using (var reader = new StreamReader(pipeServer, leaveOpen: true))
+                {
+                    var text = await reader.ReadToEndAsync();
+                    args = text.Split(Separator, StringSplitOptions.RemoveEmptyEntries);
+                }
+
                 // Do an asynchronous call to ActivateFirstInstance function
-                Application.Current?.Dispatcher.Invoke(ActivateFirstInstance);
+                Application.Current?.Dispatcher.Invoke(() => ActivateFirstInstance(args));
 
                 // Disconect client
                 pipeServer.Disconnect();
@@ -114,20 +130,24 @@ namespace Flow.Launcher.Helper
         /// <param name="args">
         /// Command line arguments for the second instance, passed to the first instance to take appropriate action.
         /// </param>
-        private static async Task SignalFirstInstanceAsync(string channelName)
+        private static async Task SignalFirstInstanceAsync(string channelName, string[] args)
         {
             // Create a client pipe connected to server
             using NamedPipeClientStream pipeClient = new NamedPipeClientStream(".", channelName, PipeDirection.Out);
 
             // Connect to the available pipe
-            await pipeClient.ConnectAsync(0);
+            await pipeClient.ConnectAsync(1000);
+
+            using var writer = new StreamWriter(pipeClient);
+            await writer.WriteAsync(string.Join(Separator, args));
+            await writer.FlushAsync();
         }
 
         /// <summary>
         /// Activates the first instance of the application with arguments from a second instance.
         /// </summary>
         /// <param name="args">List of arguments to supply the first instance of the application.</param>
-        private static void ActivateFirstInstance()
+        private static void ActivateFirstInstance(string[] args)
         {
             // Set main window state and process command line args
             if (Application.Current == null)
@@ -135,7 +155,7 @@ namespace Flow.Launcher.Helper
                 return;
             }
 
-            ((TApplication)Application.Current).OnSecondAppStarted();
+            ((TApplication)Application.Current).OnSecondAppStarted(args);
         }
 
         #endregion

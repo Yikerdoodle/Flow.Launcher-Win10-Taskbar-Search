@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
@@ -245,7 +245,7 @@ namespace Flow.Launcher
 
                 AutoStartup();
                 AutoUpdates();
-                TaskbarSearchButton.SetUpOnce(_settings);
+                TaskbarSearchButton.SetUp(_settings);
 
                 API.SaveAppAllSettings();
                 API.LogInfo(ClassName, "End Flow Launcher startup ------------------------------------------------------");
@@ -463,8 +463,15 @@ namespace Flow.Launcher
 
         #region ISingleInstanceApp
 
-        public void OnSecondAppStarted()
+        public void OnSecondAppStarted(string[] args)
         {
+            // --search: the taskbar search button, which opens the search layout like Windows' search button
+            if (Array.Exists(args, a => string.Equals(a, Flow.Launcher.MainWindow.SearchArgument, StringComparison.OrdinalIgnoreCase)))
+            {
+                _mainWindow.ToggleSearch();
+                return;
+            }
+
             API.ShowMainWindow();
         }
 
