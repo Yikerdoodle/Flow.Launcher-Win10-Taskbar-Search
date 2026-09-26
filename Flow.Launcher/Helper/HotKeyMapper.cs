@@ -28,6 +28,47 @@ internal static class HotKeyMapper
             SetHotkey(_settings.DialogJumpHotkey, DialogJump.OnToggleHotkey);
         }
         LoadCustomPluginHotkey();
+
+        Microsoft.Win32.SystemEvents.SessionSwitch += OnSessionSwitch;
+    }
+
+    // ChefKeys remembers which keys are down from the key presses it sees. Locking the PC switches to the lock screen
+    // in the middle of a key press (the L of Win+L), so it sees that key go down but never come back up. It then
+    // takes every Win press as part of a key combination and lets the Start menu open instead of Flow, until some
+    // other key is released. Forgetting the remembered keys when the session is locked or unlocked fixes that.
+    private static readonly string[] ChefKeysKeyState =
+        { "isWinKeyDown", "nonRegisteredKeyDown", "cancelSingleKeyAction", "registeredKeyDown", "lastRegisteredDownKey" };
+
+    private static void OnSessionSwitch(object sender, Microsoft.Win32.SessionSwitchEventArgs e)
+    {
+        if (e.Reason is not (Microsoft.Win32.SessionSwitchReason.SessionLock
+            or Microsoft.Win32.SessionSwitchReason.SessionUnlock
+            or Microsoft.Win32.SessionSwitchReason.ConsoleConnect
+            or Microsoft.Win32.SessionSwitchReason.RemoteConnect)) return;
+
+        // On the UI thread, where ChefKeys' keyboard hook runs, so this can't interleave with a key press
+        System.Windows.Application.Current?.Dispatcher.BeginInvoke(() =>
+        {
+            try
+            {
+                foreach (var name in ChefKeysKeyState)
+                {
+                    var field = typeof(ChefKeysManager).GetField(name,
+                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                    if (field == null)
+                    {
+                        App.API.LogError(ClassName, $"ChefKeys has no field {name}; its key state was not reset");
+                        continue;
+                    }
+                    field.SetValue(null, field.FieldType == typeof(bool) ? false : 0);
+                }
+                App.API.LogInfo(ClassName, $"Reset ChefKeys' key state after {e.Reason}");
+            }
+            catch (Exception ex)
+            {
+                App.API.LogException(ClassName, $"Failed to reset ChefKeys' key state after {e.Reason}", ex);
+            }
+        });
     }
 
     internal static void OnToggleHotkey(object sender, HotkeyEventArgs args)
