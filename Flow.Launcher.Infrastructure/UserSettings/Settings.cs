@@ -643,6 +643,12 @@ namespace Flow.Launcher.Infrastructure.UserSettings
         Selected,
         Empty,
         Preserved,
+
+        /// <summary>
+        /// Like <see cref="Preserved"/> (the last query stays, unselected), but starting to type - typing an actual
+        /// character, not navigating or backspacing - replaces it instead of being inserted into it.
+        /// </summary>
+        PreservedUntilTyped,
         ActionKeywordPreserved,
         ActionKeywordSelected
     }

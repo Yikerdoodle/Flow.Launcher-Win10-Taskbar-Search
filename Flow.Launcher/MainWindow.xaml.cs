@@ -1620,6 +1620,17 @@ namespace Flow.Launcher
             }
         }
 
+        // LastQueryMode.PreservedUntilTyped: the previous query is shown again, unselected; the first character
+        // typed clears it first instead of being inserted into it. Backspacing or navigating the caret is left
+        // alone, since those don't fire TextInput - only an actual typed character consumes and clears the flag.
+        private void QueryTextBox_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (!_viewModel.ClearQueryOnNextInput) return;
+
+            _viewModel.ClearQueryOnNextInput = false;
+            QueryTextBox.Clear();
+        }
+
         private void QueryTextBox_OnPreviewDragOver(object sender, DragEventArgs e)
         {
             e.Handled = true;

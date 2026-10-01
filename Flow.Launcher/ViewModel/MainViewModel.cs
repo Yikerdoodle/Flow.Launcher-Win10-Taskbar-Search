@@ -804,6 +804,13 @@ namespace Flow.Launcher.ViewModel
 
         public bool LastQuerySelected { get; set; }
 
+        /// <summary>
+        /// LastQueryMode.PreservedUntilTyped: when true, the first character typed into the query box replaces its
+        /// current content instead of being inserted into it. Set in <see cref="Hide"/>, consumed and cleared by
+        /// MainWindow's QueryTextBox_PreviewTextInput.
+        /// </summary>
+        public bool ClearQueryOnNextInput { get; set; }
+
         // This is not a reliable indicator of the cursor's position, it is manually set for a specific purpose.
         public bool QueryTextCursorMovedToEnd { get; set; }
 
@@ -2146,6 +2153,9 @@ namespace Flow.Launcher.ViewModel
 
                 BackToQueryResults();
 
+                // Only set true by the PreservedUntilTyped case below
+                ClearQueryOnNextInput = false;
+
                 switch (Settings.LastQueryMode)
                 {
                     case LastQueryMode.Empty:
@@ -2154,6 +2164,10 @@ namespace Flow.Launcher.ViewModel
                     case LastQueryMode.Preserved:
                     case LastQueryMode.Selected:
                         LastQuerySelected = Settings.LastQueryMode == LastQueryMode.Preserved;
+                        break;
+                    case LastQueryMode.PreservedUntilTyped:
+                        LastQuerySelected = true;
+                        ClearQueryOnNextInput = !string.IsNullOrEmpty(QueryText);
                         break;
                     case LastQueryMode.ActionKeywordPreserved:
                     case LastQueryMode.ActionKeywordSelected:
