@@ -13,6 +13,10 @@
         <ResourceDictionary Source="pack://application:,,,/Themes/Base.xaml" />
     </ResourceDictionary.MergedDictionaries>
     <system:Boolean x:Key="ThemeBlurEnabled">False</system:Boolean>
+    <!--  The window background is the Windows 10 system acrylic of the Start menu and search panel (see
+          Helper/SystemAcrylic.cs), unless Transparency effects is off in Windows' settings, then the solid
+          Win10StartBackground  -->
+    <system:Boolean x:Key="ThemeWin10Acrylic">True</system:Boolean>
     <system:String x:Key="SystemBG">Auto</system:String>
     <Color x:Key="LightBG">#FFFAFAFA</Color>
     <!--  Windows 10 Start menu background (dark), measured  -->

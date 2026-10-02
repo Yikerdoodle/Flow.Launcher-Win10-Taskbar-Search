@@ -28,6 +28,18 @@ namespace Flow.Launcher.Core.Resource
 
         public bool BlurEnabled { get; private set; }
 
+        /// <summary>
+        /// Whether the current theme asks (with <c>ThemeWin10Acrylic</c>) for the window background to be the
+        /// Windows 10 system acrylic, like the Start menu's, which the main window applies itself.
+        /// </summary>
+        public bool UsesWin10Acrylic { get; private set; }
+
+        /// <summary>
+        /// Raised on the UI thread after the frame was refreshed (theme or light/dark change), when anything
+        /// depending on the theme's frame needs to be applied again.
+        /// </summary>
+        public event Action FrameRefreshed;
+
         private const string ThemeMetadataNamePrefix = "Name:";
         private const string ThemeMetadataIsDarkPrefix = "IsDark:";
         private const string ThemeMetadataHasBlurPrefix = "HasBlur:";
@@ -429,6 +441,7 @@ namespace Flow.Launcher.Core.Resource
                 // Check if blur is enabled
                 var dict = GetThemeResourceDictionary(theme);
                 BlurEnabled = Win32Helper.IsBackdropSupported() && IsThemeBlurEnabled(dict);
+                UsesWin10Acrylic = dict.Contains("ThemeWin10Acrylic") && dict["ThemeWin10Acrylic"] is true;
 
                 // Apply blur and drop shadow effect so that we do not need to call it again
                 _ = RefreshFrameAsync();
@@ -642,6 +655,7 @@ namespace Flow.Launcher.Core.Resource
 
                 SetBlurForWindow(_settings.Theme, backdropType);
                 AutoDropShadow(useDropShadowEffect);
+                FrameRefreshed?.Invoke();
             }, DispatcherPriority.Render);
         }
 

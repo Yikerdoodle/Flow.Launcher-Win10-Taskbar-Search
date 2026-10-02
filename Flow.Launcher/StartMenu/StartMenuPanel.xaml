@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:m="clr-namespace:iNKORE.UI.WPF.Modern.Markup;assembly=iNKORE.UI.WPF.Modern"
     xmlns:sm="clr-namespace:Flow.Launcher.StartMenu"
-    Background="{DynamicResource Win10StartBackground}"
+    Background="{DynamicResource Win10StartPanelBackground}"
     ClipToBounds="True"
     Focusable="False"
     MouseLeftButtonDown="OnPanelMouseDown"

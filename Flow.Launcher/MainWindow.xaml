@@ -16,7 +16,6 @@
     MinHeight="30"
     d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
     AllowDrop="True"
-    AllowsTransparency="True"
     Background="Transparent"
     Closed="OnClosed"
     Closing="OnClosing"

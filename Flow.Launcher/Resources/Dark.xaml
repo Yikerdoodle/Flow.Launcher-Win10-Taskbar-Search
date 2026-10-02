@@ -144,6 +144,7 @@
           are BaseMedium (60% white) over the background or over a selected row. Text uses the blended solid colors,
           because WPF blends semi-transparent text differently from Windows and it would come out brighter  -->
     <SolidColorBrush x:Key="Win10StartBackground" Color="#2F2F2F" />
+    <SolidColorBrush x:Key="Win10StartPanelBackground" Color="#2F2F2F" />
     <Color x:Key="Win10StartHoverColor">#19FFFFFF</Color>
     <SolidColorBrush x:Key="Win10StartSecondaryText" Color="#ACACAC" />
     <SolidColorBrush x:Key="Win10StartSecondaryTextSelected" Color="#B4B4B4" />
