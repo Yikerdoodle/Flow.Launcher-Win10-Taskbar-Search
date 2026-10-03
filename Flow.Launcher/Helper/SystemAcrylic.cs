@@ -8,9 +8,9 @@ namespace Flow.Launcher.Helper;
 /// acrylic (a blur of what is behind the panel, a saturation boost, a tint and noise), per panel and per light or dark
 /// mode, and a solid color when "Transparency effects" is off in Settings > Personalization > Colors.
 /// <para>
-/// Windows draws the panels' acrylic itself and gives other windows only an approximation of it, so Flow renders it
-/// in software, as measured from the native panels (see <see cref="Win10AcrylicRenderer"/> and
-/// <see cref="Win10AcrylicController"/>). This class has the system settings that decide how.
+/// Windows draws the panels' acrylic itself, with the compositor on the GPU, and gives other windows only an
+/// approximation of it, so Flow builds the same effect for its window, as measured from the native panels (see
+/// <see cref="Win10AcrylicWindow"/>). This class has the system settings that decide how.
 /// </para>
 /// </summary>
 internal static class SystemAcrylic
@@ -28,10 +28,9 @@ internal static class SystemAcrylic
     private const string PersonalizeKey = @"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize";
 
     /// <summary>
-    /// The rendering needs to capture what is behind Flow without Flow in it, which is
-    /// <c>SetWindowDisplayAffinity</c> with <c>WDA_EXCLUDEFROMCAPTURE</c>: Windows 10 2004 (build 19041).
+    /// The compositor's host backdrop for a window of its own: Windows 10 1903 (build 18362).
     /// </summary>
-    internal static bool IsSupported => Environment.OSVersion.Version.Build >= 19041;
+    internal static bool IsSupported => Environment.OSVersion.Version.Build >= 18362;
 
     /// <summary>
     /// "Transparency effects" in Settings > Personalization > Colors.

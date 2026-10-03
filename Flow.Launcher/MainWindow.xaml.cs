@@ -79,12 +79,8 @@ namespace Flow.Launcher
         private bool _isClockPanelAnimating = false;
         private Storyboard _progressBarStoryboard;
 
-        // The theme that copies the Windows 10 Start menu and search panel
-        private const string Win10ThemeName = "Win10Taskbar";
-
-        // Windows 10 acrylic rendered in software, see ApplyWin10Acrylic
-        private Win10AcrylicController _acrylic;
-        private DispatcherTimer _acrylicTimer;
+        // The Windows 10 acrylic, from the compositor, in a window behind this one, see ApplyWin10Acrylic
+        private readonly Win10AcrylicWindow _acrylic = new();
 
         // IDisposable
         private bool _disposed = false;
@@ -102,12 +98,6 @@ namespace Flow.Launcher
 
             Topmost = _settings.ShowAtTopmost;
 
-            // The Windows 10 theme draws an opaque rectangle (its acrylic is rendered in software from a capture of what
-            // is behind the window, see Win10AcrylicController), so its window has no per-pixel transparency: a layered
-            // window can't be left out of its own capture. The other themes are drawn with it (rounded corners, shadow).
-            // This can't change once the window exists, so a switch between them applies at the next start.
-            AllowsTransparency = _settings.Theme != Win10ThemeName;
-
             InitializeComponent();
             UpdatePosition();
 
@@ -116,14 +106,6 @@ namespace Flow.Launcher
             DataObject.AddPastingHandler(QueryTextBox, QueryTextBox_OnPaste);
             _viewModel.ActualApplicationThemeChanged += ViewModel_ActualApplicationThemeChanged;
             _theme.FrameRefreshed += ApplyWin10Acrylic;
-
-            _acrylic = new Win10AcrylicController(this);
-            SizeChanged += (_, _) => RefreshAcrylic();
-            LocationChanged += (_, _) => RefreshAcrylic();
-            // The native panels' acrylic is live: it follows what moves behind them. The renderer only works when the
-            // backdrop changed
-            _acrylicTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromMilliseconds(400) };
-            _acrylicTimer.Tick += (_, _) => RefreshAcrylic();
         }
 
         #endregion
@@ -300,9 +282,7 @@ namespace Flow.Launcher
                                     // Focus query box
                                     QueryTextBox.Focus();
 
-                                    // The backdrop under the window is new every time it is shown
-                                    RefreshAcrylic(force: true);
-                                    _acrylicTimer.Start();
+                                    PlaceAcrylic();
 
                                     // Play window animation
                                     if (_settings.UseAnimation && !_viewModel.IsDialogJumpWindowUnderDialog())
@@ -315,7 +295,7 @@ namespace Flow.Launcher
                                 }
                                 else
                                 {
-                                    _acrylicTimer.Stop();
+                                    _acrylic.Hide();
                                     _lastHiddenAt = DateTime.UtcNow;
                                     _lastHiddenInSearch = !_startMode;
                                     _searchLayoutRequested = false;
@@ -745,6 +725,10 @@ namespace Flow.Launcher
                         handled = true;
                     }
                     break;
+                case WmWindowPosChanged:
+                    // Moved, resized, or its place in the z-order changed: the acrylic window behind follows
+                    PlaceAcrylic();
+                    break;
                 case WmSettingChange:
                     // Windows' light/dark mode and Transparency effects switches broadcast "ImmersiveColorSet"
                     if (lParam != IntPtr.Zero && Marshal.PtrToStringUni(lParam) == "ImmersiveColorSet")
@@ -759,44 +743,58 @@ namespace Flow.Launcher
         }
 
         private const int WmSettingChange = 0x001A;
+        private const int WmWindowPosChanged = 0x0047;
 
         #endregion
 
         #region Windows 10 acrylic
 
         // The Windows 10 Taskbar theme's window background is the acrylic of the native panel the layout copies (Start for
-        // the Start layout, the search panel for the search layout), like Start and the search panel have it, rendered in
-        // software from a capture of what is behind the window (see Win10AcrylicController). Until its first rendering
-        // is in, and in the modes it isn't measured for (dark mode) or when Windows' Transparency effects is off, the
-        // background is the solid theme color.
+        // the Start layout, the search panel for the search layout), like Start and the search panel have it: made by the
+        // compositor, on the GPU, in a window right behind this one (see Win10AcrylicWindow), and this window's own
+        // background is transparent. Only the light mode with Transparency effects on is measured; otherwise (dark mode,
+        // Transparency effects off) the background is the solid theme color.
+        private bool UsesWin10Acrylic =>
+            _theme.UsesWin10Acrylic && SystemAcrylic.IsSupported && SystemAcrylic.TransparencyEnabled &&
+            SystemAcrylic.LightMode && _acrylic.IsAvailable;
+
         private void ApplyWin10Acrylic()
         {
             if (new WindowInteropHelper(this).Handle == IntPtr.Zero) return;
 
-            if (_theme.UsesWin10Acrylic && SystemAcrylic.IsSupported && SystemAcrylic.TransparencyEnabled && _acrylic.CanRender)
+            if (UsesWin10Acrylic)
             {
-                // The layout changed, so the size did: render for it
-                RefreshAcrylic(force: true);
-                return;
+                // Not fully transparent, so the window keeps catching clicks (a fully transparent pixel of this layered
+                // window lets the click through)
+                var faint = new SolidColorBrush(Color.FromArgb(1, 255, 255, 255));
+                faint.Freeze();
+                Application.Current.Resources["Win10StartBackground"] = faint;
+                Application.Current.Resources["Win10StartPanelBackground"] = faint;
+                _acrylic.Prepare(new WindowInteropHelper(this).Handle);
+                PlaceAcrylic();
             }
-
-            _acrylic?.Reset();
-            Application.Current.Resources.Remove("Win10StartBackground");
-            Application.Current.Resources.Remove("Win10StartPanelBackground");
+            else
+            {
+                _acrylic.Hide();
+                Application.Current.Resources.Remove("Win10StartBackground");
+                Application.Current.Resources.Remove("Win10StartPanelBackground");
+            }
         }
 
-        // The software rendering of the acrylic follows what is behind the window: when it is shown, moved or resized,
-        // the layout changes, or the backdrop changes
-        private void RefreshAcrylic(bool force = false)
+        // The window with the acrylic follows this one: shown with it, and moved, resized and layered like it
+        private void PlaceAcrylic()
         {
-            if (!IsLoaded || !_viewModel.MainWindowVisibilityStatus) return;
-            if (!_theme.UsesWin10Acrylic || !SystemAcrylic.IsSupported || !SystemAcrylic.TransparencyEnabled ||
-                !_acrylic.CanRender)
-            {
-                return;
-            }
+            var handle = new WindowInteropHelper(this).Handle;
+            if (handle == IntPtr.Zero) return;
 
-            _acrylic.Request(_startMode ? SystemAcrylic.Panel.Start : SystemAcrylic.Panel.Search, false, force);
+            if (UsesWin10Acrylic && _viewModel.MainWindowVisibilityStatus)
+            {
+                _acrylic.Place(handle, _startMode ? Win10AcrylicWindow.StartLight : Win10AcrylicWindow.SearchLight);
+            }
+            else
+            {
+                _acrylic.Hide();
+            }
         }
 
         #endregion
