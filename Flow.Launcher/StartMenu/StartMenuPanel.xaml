@@ -216,8 +216,10 @@
     </UserControl.Resources>
 
     <Grid>
-        <!--  Views, right of the rail  -->
-        <Grid Margin="48 0 0 0">
+        <!--  Views, right of the rail. The host is what is hidden under the expanded rail: the blurred copy under the rail
+              is a brush of the views themselves, which ignores what is done to their host  -->
+        <Grid x:Name="ViewsHost">
+        <Grid x:Name="Views" Margin="48 0 0 0">
             <ScrollViewer
                 x:Name="AllAppsScroller"
                 Focusable="False"
@@ -254,6 +256,7 @@
 
             <Grid x:Name="PinnedView" Visibility="Collapsed" />
         </Grid>
+        </Grid>
 
         <!--  The rail; expanding it shows the labels over the list  -->
         <Border
@@ -264,6 +267,34 @@
             ClipToBounds="True"
             MouseEnter="OnRailMouseEnter"
             MouseLeave="OnRailMouseLeave">
+            <Grid>
+            <!--  The expanded rail is an acrylic of the panel's own content, like Start's: a blur of what is under it
+                  (30 DIP; WPF's blur only reaches about 20, so a quarter size copy is blurred and scaled up), then the tint
+                  over it, on top of the window's own acrylic  -->
+            <Grid
+                x:Name="RailBlur"
+                ClipToBounds="True"
+                IsHitTestVisible="False"
+                Visibility="Collapsed">
+                <Grid HorizontalAlignment="Left" VerticalAlignment="Top">
+                    <Grid.RenderTransform>
+                        <ScaleTransform ScaleX="4" ScaleY="4" />
+                    </Grid.RenderTransform>
+                    <Rectangle x:Name="RailBlurRect" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        <Rectangle.Fill>
+                            <VisualBrush x:Name="RailBlurBrush" Stretch="Fill" ViewboxUnits="Absolute" />
+                        </Rectangle.Fill>
+                        <Rectangle.Effect>
+                            <BlurEffect KernelType="Gaussian" Radius="19" RenderingBias="Quality" />
+                        </Rectangle.Effect>
+                    </Rectangle>
+                </Grid>
+            </Grid>
+            <Border
+                x:Name="RailTint"
+                Background="{DynamicResource Win10StartRailTint}"
+                IsHitTestVisible="False"
+                Visibility="Collapsed" />
             <DockPanel LastChildFill="False">
                 <StackPanel Margin="0 4 0 0" DockPanel.Dock="Top">
                     <Border MouseLeftButtonUp="OnMenuClick" Style="{StaticResource RailButton}">
@@ -348,6 +379,7 @@
                     </Border>
                 </StackPanel>
             </DockPanel>
+            </Grid>
         </Border>
 
         <!--  The Power and account menus, drawn over the panel like Start's: 258 wide with a thin dark outline, rows

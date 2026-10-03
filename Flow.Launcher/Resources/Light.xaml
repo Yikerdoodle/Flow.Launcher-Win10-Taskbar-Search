@@ -144,6 +144,8 @@
     <SolidColorBrush x:Key="Win10StartText" Color="#000000" />
     <SolidColorBrush x:Key="Win10StartDisabledText" Color="#A0A0A0" />
     <SolidColorBrush x:Key="Win10StartPaneBackground" Color="#FCFCFC" />
+    <!--  The expanded rail over its blurred content, measured on the real Start: #E5E5E5 at 62.5%  -->
+    <SolidColorBrush x:Key="Win10StartRailTint" Color="#9FE5E5E5" />
     <SolidColorBrush x:Key="Win10StartFlyoutBackground" Color="#EEEEEE" />
     <SolidColorBrush x:Key="Win10StartFlyoutBorder" Color="#C8C8C8" />
     <SolidColorBrush x:Key="Win10StartSecondaryAccountText" Color="#4C4C4C" />

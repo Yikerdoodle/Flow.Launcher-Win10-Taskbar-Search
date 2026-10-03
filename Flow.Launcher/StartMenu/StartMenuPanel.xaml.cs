@@ -150,13 +150,34 @@ public partial class StartMenuPanel : UserControl
     private void SetRailExpanded(bool expanded, bool animate = true)
     {
         _railExpanded = expanded;
-        if (expanded)
+        if (expanded && UsesAcrylicRail)
         {
-            Rail.SetResourceReference(Border.BackgroundProperty, "Win10StartPaneBackground");
+            // Start's expanded rail: a blur of the panel's content with the tint over it, over the window's acrylic
+            Rail.Background = Brushes.Transparent;
+            UpdateRailBlur();
+            RailBlurBrush.Visual = Views;
+            RailBlur.Visibility = Visibility.Visible;
+            RailTint.Visibility = Visibility.Visible;
+            // The sharp views under the rail are replaced by the blurred copy of them
+            var w = ViewsHost.ActualWidth;
+            var h = ViewsHost.ActualHeight;
+            ViewsHost.Clip = new CombinedGeometry(GeometryCombineMode.Exclude,
+                new RectangleGeometry(new Rect(0, 0, w, h)), new RectangleGeometry(new Rect(0, 0, ExpandedRailWidth, h)));
         }
         else
         {
-            Rail.Background = Brushes.Transparent;
+            ViewsHost.Clip = null;
+            RailBlur.Visibility = Visibility.Collapsed;
+            RailTint.Visibility = Visibility.Collapsed;
+            RailBlurBrush.Visual = null;
+            if (expanded)
+            {
+                Rail.SetResourceReference(Border.BackgroundProperty, "Win10StartPaneBackground");
+            }
+            else
+            {
+                Rail.Background = Brushes.Transparent;
+            }
         }
 
         var target = expanded ? ExpandedRailWidth : RailWidth;
@@ -172,6 +193,21 @@ public partial class StartMenuPanel : UserControl
             Rail.BeginAnimation(WidthProperty, null);
             Rail.Width = target;
         }
+    }
+
+    // The acrylic rail needs the window's acrylic (its background is the 1/255 faint brush then, not a solid color) and a
+    // tint measured for the mode (light mode only so far)
+    private bool UsesAcrylicRail =>
+        TryFindResource("Win10StartRailTint") is Brush &&
+        TryFindResource("Win10StartPanelBackground") is SolidColorBrush { Color.A: < 255 };
+
+    // The blurred copy is a quarter of the size (the blur of a quarter size copy scaled up by 4)
+    private void UpdateRailBlur()
+    {
+        RailBlurRect.Width = ExpandedRailWidth / 4;
+        RailBlurRect.Height = Math.Max(1, Rail.ActualHeight / 4);
+        // The part of the views under the expanded rail: from the rail's left edge, 48 left of the views' own
+        RailBlurBrush.Viewbox = new Rect(-RailWidth, 0, ExpandedRailWidth, Math.Max(1, Rail.ActualHeight));
     }
 
     private void OnRailMouseEnter(object sender, MouseEventArgs e)
